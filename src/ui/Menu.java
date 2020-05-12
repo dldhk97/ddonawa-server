@@ -8,9 +8,8 @@ public class Menu {
 	public void show() {
 		System.out.println("1. 다나와 파싱 테스트");
 		System.out.println("2. 네이버쇼핑 파싱 테스트");
+		System.out.println("3. 종료");
 	}
 	
-	public int selectNumber() {
-		return -1;
-	}
+
 }

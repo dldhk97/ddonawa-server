@@ -1,6 +1,7 @@
 package utility;
 
 import java.util.Date;
+import java.util.Scanner;
 
 public class IOHandler {
 	
@@ -19,5 +20,18 @@ public class IOHandler {
 	public void log(String s) {
 		// [날짜+시간+사용자명]+오류명 이런식으로 로깅하게 할 예정임
 		System.out.println("[" + new Date() + ".Server]" + s);
+	}
+	
+	public int getIntByUser() {
+		try {
+			Scanner scn = new Scanner(System.in);
+			System.out.print(">> ");
+			int userInput = scn.nextInt();
+			return userInput;			
+		}
+		catch(Exception e) {
+			log(e.getMessage());
+			return -987654321;
+		}
 	}
 }

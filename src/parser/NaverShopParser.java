@@ -1,5 +1,8 @@
 package parser;
 
-public class NaverShopParser {
-
+public class NaverShopParser extends Parser{
+	@Override
+	public void parseTest() {
+		
+	}
 }
