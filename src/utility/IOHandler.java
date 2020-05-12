@@ -26,12 +26,26 @@ public class IOHandler {
 		try {
 			Scanner scn = new Scanner(System.in);
 			System.out.print(">> ");
-			int userInput = scn.nextInt();
-			return userInput;			
+			return scn.nextInt();			
 		}
 		catch(Exception e) {
 			log(e.getMessage());
 			return -987654321;
+		}
+	}
+	
+	public String getLineByUser(String msg) {
+		try {
+			if(msg != null) {
+				System.out.println(msg);
+			}
+			Scanner scn = new Scanner(System.in);
+			System.out.print(">> ");
+			return scn.nextLine();			
+		}
+		catch(Exception e) {
+			log(e.getMessage());
+			return null;
 		}
 	}
 }

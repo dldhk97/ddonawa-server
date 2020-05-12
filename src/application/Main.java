@@ -16,6 +16,7 @@ public class Main {
 		try {
 			Menu menu = new Menu();
 			menu.welcome();
+			String searchStr = null;
 			
 			while(true) {
 				menu.show();
@@ -23,11 +24,13 @@ public class Main {
 				switch(selected) {
 				case 1:
 					DanawaParser dp = new DanawaParser();
-					dp.parse();
+					searchStr = IOHandler.getInstance().getLineByUser("검색어 : ");
+					dp.parse(searchStr);
 					break;
 				case 2:
 					NaverShopParser nsp = new NaverShopParser();
-					nsp.parse();
+					searchStr = IOHandler.getInstance().getLineByUser("검색어 : ");
+					nsp.parse(searchStr);
 					break;
 				case 3:
 					return;

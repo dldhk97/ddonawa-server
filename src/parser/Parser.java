@@ -13,18 +13,18 @@ import utility.IOHandler;
 
 public abstract class Parser {
 	
-	public void parse() {
-		String searchStr = "모과";
-		String orgHtml = "";
+	public void parse(String searchStr) {
+//		String searchStr = "포스틱(156G)";
+		String orgHtml = null;
+		SeleniumManager sm = null;
 		
 		try {
 			// URL에 한글을 그대로 넣으면 깨질 수 있기 때문에 UTF-8 혹은 EUC-KR로 변환한다.
 			String encoded = toUTF8(searchStr);
 			
 			// 셀레니움으로 크롤링
-			SeleniumManager sm = new SeleniumManager();
-			orgHtml = sm.explicitCrawl(getBaseUrl() + encoded, getProductClassName());
-			sm.quit();			// 웹 드라이버 종료. 나중에 연속해서 파싱할거면 하면 안되고, 만들어 둔 셀레니움 매니저로 계속 crawl 하면됨.
+			sm = new SeleniumManager();
+			orgHtml = sm.explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
 			
 			// 필요한 정보 빼내기
 			parseProduct(orgHtml);
@@ -35,6 +35,10 @@ public abstract class Parser {
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log(e.getMessage());
+		}
+		
+		if(sm != null) {
+			sm.quit();			// 웹 드라이버 종료. 나중에 연속해서 파싱할거면 하면 안되고, 만들어 둔 셀레니움 매니저로 계속 crawl 하면됨.
 		}
 	}
 	
@@ -75,6 +79,7 @@ public abstract class Parser {
 	// 자식 클래스에서 처리할 내용들
 	protected abstract String getBaseUrl();			// 다나와파서면 다나와의 URL을, 네이버파서면 네이버의 URL을 가져옴 
 	protected abstract String getProductClassName();	// 클래스에 맞게 상품을 특정하는 html-className을 가져옴
+	protected abstract String getExplicitClassName();
 	
 	// HTML 파싱
 	protected abstract String getHref(Element product);
