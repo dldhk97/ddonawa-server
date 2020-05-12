@@ -23,11 +23,11 @@ public class Main {
 				switch(selected) {
 				case 1:
 					DanawaParser dp = new DanawaParser();
-					dp.parseTest();
+					dp.parse();
 					break;
 				case 2:
 					NaverShopParser nsp = new NaverShopParser();
-					nsp.parseTest();
+					nsp.parse();
 					break;
 				case 3:
 					return;

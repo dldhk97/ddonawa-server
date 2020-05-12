@@ -1,5 +1,7 @@
 package parser;
 
+import java.util.concurrent.TimeUnit;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -38,16 +40,19 @@ public class SeleniumManager {
         }
 	}
 	
-	// url 던져주면 해당 html 문자열로 반환
-	public String crawl(String url) throws Exception{
-		// 암시적 대기 (막무가내로 10초 대기 후 로딩)
-        //driver.manage().timeouts().implicitlyWait(TIMEOUT_CRWAL, TimeUnit.SECONDS);
-		//driver.get(url);
-		
-		// 명시적 대기 (prod_main_info 클래스가 뜨면 패스, 최대 3초 대기)
+	// 암시적 대기 후 크롤 (페이지가 로딩되길 기다렸다가 크롤)
+	public String implicitCrawl(String url) throws Exception{
+        driver.manage().timeouts().implicitlyWait(TIMEOUT_CRWAL, TimeUnit.SECONDS);
+		driver.get(url);
+      
+        return driver.getPageSource();
+	}
+
+	// 명시적 대기 후 크롤 (클래스명이 로드될때까지 대기, 클래스가 끝까지 안보이면 예외발생)
+	public String explicitCrawl(String url, String className) throws Exception{
         WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_CRWAL);
         driver.get(url);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("prod_main_info")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className(className)));
       
         return driver.getPageSource();
 	}
@@ -55,11 +60,5 @@ public class SeleniumManager {
 	// 이거 안하면 드라이버 프로세스는 살아있음
 	public void quit() {
 		driver.quit();
-	}
-	
-	@Override
-	protected void finalize() throws Throwable {
-		quit();
-		super.finalize();
 	}
 }
