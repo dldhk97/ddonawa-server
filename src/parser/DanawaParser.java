@@ -64,7 +64,6 @@ public class DanawaParser extends Parser {
 		Elements priceElems = productHtml.getElementsByClass("price_sect");
 		if(priceElems.size() > 0) {
 			return priceElems.get(0).getElementsByTag("strong").get(0).text();
-//			return priceElems.get(0).text();
 		}
 		
 		return null;
