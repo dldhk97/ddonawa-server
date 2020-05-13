@@ -5,10 +5,10 @@ import java.util.Scanner;
 
 public class IOHandler {
 	
-	// ½Ì±ÛÅæ ÆĞÅÏ
+	// ì‹±ê¸€í†¤ íŒ¨í„´
 	private static IOHandler _instance;
 	
-	// IOHandler »ç¿ë ½Ã IOHandler.getInstance().¸Ş¼Òµå¸í À¸·Î »ç¿ëÇÏ¸é µÊ.
+	// IOHandler ì‚¬ìš© ì‹œ IOHandler.getInstance().ë©”ì†Œë“œëª… ìœ¼ë¡œ ì‚¬ìš©í•˜ë©´ ë¨.
 	public static IOHandler getInstance()
 	{
 		if(_instance == null)
@@ -16,9 +16,9 @@ public class IOHandler {
 		return _instance;
 	}
 	
-	// ÄÜ¼Ö or ÅØ½ºÆ® ÆÄÀÏ¿¡ ·Î±ë
+	// ì½˜ì†” or í…ìŠ¤íŠ¸ íŒŒì¼ì— ë¡œê¹…
 	public void log(String s) {
-		// [³¯Â¥+½Ã°£+»ç¿ëÀÚ¸í]+¿À·ù¸í ÀÌ·±½ÄÀ¸·Î ·Î±ëÇÏ°Ô ÇÒ ¿¹Á¤ÀÓ
+		// [ë‚ ì§œ+ì‹œê°„+ì‚¬ìš©ìëª…]+ì˜¤ë¥˜ëª… ì´ëŸ°ì‹ìœ¼ë¡œ ë¡œê¹…í•˜ê²Œ í•  ì˜ˆì •ì„
 		System.out.println("[" + new Date() + ".Server]" + s);
 	}
 	

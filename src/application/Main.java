@@ -9,7 +9,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		run();
-		System.out.println("Á¾·áµÊ");
+		System.out.println("ì¢…ë£Œë¨");
 	}
 	
 	private static void run() {
@@ -24,12 +24,12 @@ public class Main {
 				switch(selected) {
 				case 1:
 					DanawaParser dp = new DanawaParser();
-					searchStr = IOHandler.getInstance().getLineByUser("°Ë»ö¾î : ");
+					searchStr = IOHandler.getInstance().getLineByUser("ê²€ìƒ‰ì–´ : ");
 					dp.parse(searchStr);
 					break;
 				case 2:
 					NaverShopParser nsp = new NaverShopParser();
-					searchStr = IOHandler.getInstance().getLineByUser("°Ë»ö¾î : ");
+					searchStr = IOHandler.getInstance().getLineByUser("ê²€ìƒ‰ì–´ : ");
 					nsp.parse(searchStr);
 					break;
 				case 3:

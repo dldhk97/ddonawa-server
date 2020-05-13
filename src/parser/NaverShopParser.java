@@ -5,8 +5,8 @@ import org.jsoup.select.Elements;
 public class NaverShopParser extends Parser{
 	
 	private static final String BASE_URL = "https://search.shopping.naver.com/search/all.nhn?query=";
-	private static final String PRODUCT_CLASS = "_itemSection";							// ÆÄ½ÌÇÑ HTML¿¡¼­ »óÇ°À» Æ¯Á¤ÇÏ´Â Å¬·¡½º¸í. <div class="prod_main_info">ÀÌ¸é child³ëµåµéÀ» ÇÏ³ªÀÇ »óÇ°À¸·Î º¸°Ú´Ù´Â ÀÇ¹Ì.
-	private static final String EXPLICIT_CLASS = "goods_list";							// ÇØ´ç Å¬·¡½º°¡ ·ÎµùµÉ ¶§ ±îÁö ÆÄ½ÌÀ» ÇÏÁö ¾ÊÀ½
+	private static final String PRODUCT_CLASS = "_itemSection";							// íŒŒì‹±í•œ HTMLì—ì„œ ìƒí’ˆì„ íŠ¹ì •í•˜ëŠ” í´ë˜ìŠ¤ëª…. <div class="prod_main_info">ì´ë©´ childë…¸ë“œë“¤ì„ í•˜ë‚˜ì˜ ìƒí’ˆìœ¼ë¡œ ë³´ê² ë‹¤ëŠ” ì˜ë¯¸.
+	private static final String EXPLICIT_CLASS = "goods_list";							// í•´ë‹¹ í´ë˜ìŠ¤ê°€ ë¡œë”©ë  ë•Œ ê¹Œì§€ íŒŒì‹±ì„ í•˜ì§€ ì•ŠìŒ
     
     @Override
     protected String getBaseUrl() {
@@ -23,7 +23,7 @@ public class NaverShopParser extends Parser{
     	return EXPLICIT_CLASS;
     }
 	
-	// ------------------------------ HTML ÃßÃâ ------------------------------
+	// ------------------------------ HTML ì¶”ì¶œ ------------------------------
 	
     @Override
 	protected String getHref(Element productHtml) {

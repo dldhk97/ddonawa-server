@@ -2,13 +2,13 @@ package ui;
 
 public class Menu {
 	public void welcome() {
-		System.out.println("¶Ç³ª¿Í ¼­¹ö v0.01");
+		System.out.println("ë˜ë‚˜ì™€ ì„œë²„ v0.01");
 	}
 	
 	public void show() {
-		System.out.println("1. ´Ù³ª¿Í ÆÄ½Ì Å×½ºÆ®");
-		System.out.println("2. ³×ÀÌ¹ö¼îÇÎ ÆÄ½Ì Å×½ºÆ®");
-		System.out.println("3. Á¾·á");
+		System.out.println("1. ë‹¤ë‚˜ì™€ íŒŒì‹± í…ŒìŠ¤íŠ¸");
+		System.out.println("2. ë„¤ì´ë²„ì‡¼í•‘ íŒŒì‹± í…ŒìŠ¤íŠ¸");
+		System.out.println("3. ì¢…ë£Œ");
 	}
 	
 

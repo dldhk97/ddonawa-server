@@ -14,56 +14,56 @@ import utility.IOHandler;
 public abstract class Parser {
 	
 	public void parse(String searchStr) {
-//		String searchStr = "Æ÷½ºÆ½(156G)";
+//		String searchStr = "í¬ìŠ¤í‹±(156G)";
 		String orgHtml = null;
 		SeleniumManager sm = null;
 		
 		try {
-			// URL¿¡ ÇÑ±ÛÀ» ±×´ë·Î ³ÖÀ¸¸é ±úÁú ¼ö ÀÖ±â ¶§¹®¿¡ UTF-8 È¤Àº EUC-KR·Î º¯È¯ÇÑ´Ù.
+			// URLì— í•œê¸€ì„ ê·¸ëŒ€ë¡œ ë„£ìœ¼ë©´ ê¹¨ì§ˆ ìˆ˜ ìˆê¸° ë•Œë¬¸ì— UTF-8 í˜¹ì€ EUC-KRë¡œ ë³€í™˜í•œë‹¤.
 			String encoded = toUTF8(searchStr);
 			
-			// ¼¿·¹´Ï¿òÀ¸·Î Å©·Ñ¸µ
+			// ì…€ë ˆë‹ˆì›€ìœ¼ë¡œ í¬ë¡¤ë§
 			sm = new SeleniumManager();
 			orgHtml = sm.explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
 			
-			// ÇÊ¿äÇÑ Á¤º¸ »©³»±â
+			// í•„ìš”í•œ ì •ë³´ ë¹¼ë‚´ê¸°
 			parseProduct(orgHtml);
 		}
 		catch(TimeoutException te) {
-			// °Ë»ö °á°ú°¡ ¾ø°Å³ª Å¸ÀÓ¾Æ¿ô
-			System.out.println("°Ë»ö °á°ú°¡ ¾ø°Å³ª Å¸ÀÓ¾Æ¿ô ¹ß»ı");
+			// ê²€ìƒ‰ ê²°ê³¼ê°€ ì—†ê±°ë‚˜ íƒ€ì„ì•„ì›ƒ
+			System.out.println("ê²€ìƒ‰ ê²°ê³¼ê°€ ì—†ê±°ë‚˜ íƒ€ì„ì•„ì›ƒ ë°œìƒ");
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log(e.getMessage());
 		}
 		
 		if(sm != null) {
-			sm.quit();			// À¥ µå¶óÀÌ¹ö Á¾·á. ³ªÁß¿¡ ¿¬¼ÓÇØ¼­ ÆÄ½ÌÇÒ°Å¸é ÇÏ¸é ¾ÈµÇ°í, ¸¸µé¾î µĞ ¼¿·¹´Ï¿ò ¸Å´ÏÀú·Î °è¼Ó crawl ÇÏ¸éµÊ.
+			sm.quit();			// ì›¹ ë“œë¼ì´ë²„ ì¢…ë£Œ. ë‚˜ì¤‘ì— ì—°ì†í•´ì„œ íŒŒì‹±í• ê±°ë©´ í•˜ë©´ ì•ˆë˜ê³ , ë§Œë“¤ì–´ ë‘” ì…€ë ˆë‹ˆì›€ ë§¤ë‹ˆì €ë¡œ ê³„ì† crawl í•˜ë©´ë¨.
 		}
 	}
 	
-	// HTML¿¡¼­ ÇÊ¿äÇÑ Á¤º¸ »©³»±â
+	// HTMLì—ì„œ í•„ìš”í•œ ì •ë³´ ë¹¼ë‚´ê¸°
 	protected void parseProduct(String html) {
 		try {
-			// °á°ú html ¹®ÀÚ¿­À» document ÇüÅÂ·Î º¯È¯
+			// ê²°ê³¼ html ë¬¸ìì—´ì„ document í˜•íƒœë¡œ ë³€í™˜
 			Document doc = Jsoup.parse(html);
 			
-			// Å¬·¡½º¸íÀ¸·Î ¼±ÅÃ
+			// í´ë˜ìŠ¤ëª…ìœ¼ë¡œ ì„ íƒ
 			Elements products = doc.getElementsByClass(getProductClassName());
 			
-			// ¿©·¯ Ç×¸ñ Áß ÇÏ³ª¾¿ Å½»ö
+			// ì—¬ëŸ¬ í•­ëª© ì¤‘ í•˜ë‚˜ì”© íƒìƒ‰
 			for(Element product : products) {
 			
-				String href = getHref(product);								// ÇÏÀÌÆÛ¸µÅ© ÃßÃâ
-				String thumbnailUrl = getThumbnailUrl(product);				// ½æ³×ÀÏ URL ÃßÃâ
-				String productName = getProductName(product);				// »óÇ°¸í ÃßÃâ
-				String price = getPrice(product);							// °¡°İ ÃßÃâ
+				String href = getHref(product);								// í•˜ì´í¼ë§í¬ ì¶”ì¶œ
+				String thumbnailUrl = getThumbnailUrl(product);				// ì¸ë„¤ì¼ URL ì¶”ì¶œ
+				String productName = getProductName(product);				// ìƒí’ˆëª… ì¶”ì¶œ
+				String price = getPrice(product);							// ê°€ê²© ì¶”ì¶œ
 				
-				// µî·Ï¿ù, Ä«Å×°í¸®´Â ÆÄ½Ì ¾ÈÇØµµ µÇ³ª? ÀÏ´Ü ÆĞ½ºÇÔ.
-				System.out.println("ÇÏÀÌÆÛ¸µÅ© : " + href);
-				System.out.println("½æ³×ÀÏ URL : " + thumbnailUrl);
-				System.out.println("»óÇ°¸í : " + productName);
-				System.out.println("°¡°İ : " + price);
+				// ë“±ë¡ì›”, ì¹´í…Œê³ ë¦¬ëŠ” íŒŒì‹± ì•ˆí•´ë„ ë˜ë‚˜? ì¼ë‹¨ íŒ¨ìŠ¤í•¨.
+				System.out.println("í•˜ì´í¼ë§í¬ : " + href);
+				System.out.println("ì¸ë„¤ì¼ URL : " + thumbnailUrl);
+				System.out.println("ìƒí’ˆëª… : " + productName);
+				System.out.println("ê°€ê²© : " + price);
 			}
 		}
 		catch(Exception e) {
@@ -71,17 +71,17 @@ public abstract class Parser {
 		}	
 	}
 	
-	// ÇÑ±ÛÀ» UTF-8·Î º¯È¯ÇÏ´Â ¸Ş¼Òµå
+	// í•œê¸€ì„ UTF-8ë¡œ ë³€í™˜í•˜ëŠ” ë©”ì†Œë“œ
 	protected String toUTF8(String str) throws UnsupportedEncodingException {
 		return URLEncoder.encode(str, "UTF-8");
 	}
 	
-	// ÀÚ½Ä Å¬·¡½º¿¡¼­ Ã³¸®ÇÒ ³»¿ëµé
-	protected abstract String getBaseUrl();			// ´Ù³ª¿ÍÆÄ¼­¸é ´Ù³ª¿ÍÀÇ URLÀ», ³×ÀÌ¹öÆÄ¼­¸é ³×ÀÌ¹öÀÇ URLÀ» °¡Á®¿È 
-	protected abstract String getProductClassName();	// Å¬·¡½º¿¡ ¸Â°Ô »óÇ°À» Æ¯Á¤ÇÏ´Â html-classNameÀ» °¡Á®¿È
+	// ìì‹ í´ë˜ìŠ¤ì—ì„œ ì²˜ë¦¬í•  ë‚´ìš©ë“¤
+	protected abstract String getBaseUrl();			// ë‹¤ë‚˜ì™€íŒŒì„œë©´ ë‹¤ë‚˜ì™€ì˜ URLì„, ë„¤ì´ë²„íŒŒì„œë©´ ë„¤ì´ë²„ì˜ URLì„ ê°€ì ¸ì˜´ 
+	protected abstract String getProductClassName();	// í´ë˜ìŠ¤ì— ë§ê²Œ ìƒí’ˆì„ íŠ¹ì •í•˜ëŠ” html-classNameì„ ê°€ì ¸ì˜´
 	protected abstract String getExplicitClassName();
 	
-	// HTML ÆÄ½Ì
+	// HTML íŒŒì‹±
 	protected abstract String getHref(Element product);
 	protected abstract String getThumbnailUrl(Element product);
 	protected abstract String getProductName(Element product);

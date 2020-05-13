@@ -11,17 +11,17 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class SeleniumManager {
-	// Å©·ÒÀ¸·Î Å©·Ñ¸µÇÒ°Å¸é true·Î ¹Ù²Ù°í »ç¿ë
+	// í¬ë¡¬ìœ¼ë¡œ í¬ë¡¤ë§í• ê±°ë©´ trueë¡œ ë°”ê¾¸ê³  ì‚¬ìš©
 	private static final boolean CHROME_MODE = true;
 	private static final int TIMEOUT_CRWAL = 3;
 	
-	// ±âº»Àº ÆÄÆøÀ¸·Î µ¿ÀÛ
+	// ê¸°ë³¸ì€ íŒŒí­ìœ¼ë¡œ ë™ì‘
 	public static String WEB_DRIVER_ID = "webdriver.gecko.driver";
 	public static String WEB_DRIVER_PATH = ".\\driver\\geckodriver-v0.26.0-win64.exe";
 	
 	private WebDriver driver;
 	
-	// ¼¿·¹´Ï¿ò ÁØºñ	
+	// ì…€ë ˆë‹ˆì›€ ì¤€ë¹„	
 	public SeleniumManager() {
 		if(CHROME_MODE) {
 			WEB_DRIVER_ID = "webdriver.chrome.driver";
@@ -29,10 +29,10 @@ public class SeleniumManager {
 		}
         System.setProperty(WEB_DRIVER_ID, WEB_DRIVER_PATH);
         
-        //µå¶óÀÌ¹ö ¼³Á¤
+        //ë“œë¼ì´ë²„ ì„¤ì •
         if(CHROME_MODE) {
         	ChromeOptions options = new ChromeOptions();
-			options.addArguments("headless");					// Å©·ÒÀÌ È­¸é»ó ¶ßÁö ¾Ê°Ô ÇÔ
+			options.addArguments("headless");					// í¬ë¡¬ì´ í™”ë©´ìƒ ëœ¨ì§€ ì•Šê²Œ í•¨
         	driver = new ChromeDriver(options);
         }
         else {
@@ -40,7 +40,7 @@ public class SeleniumManager {
         }
 	}
 	
-	// ¾Ï½ÃÀû ´ë±â ÈÄ Å©·Ñ (ÆäÀÌÁö°¡ ·ÎµùµÇ±æ ±â´Ù·È´Ù°¡ Å©·Ñ)
+	// ì•”ì‹œì  ëŒ€ê¸° í›„ í¬ë¡¤ (í˜ì´ì§€ê°€ ë¡œë”©ë˜ê¸¸ ê¸°ë‹¤ë ¸ë‹¤ê°€ í¬ë¡¤)
 	public String implicitCrawl(String url) throws Exception{
         driver.manage().timeouts().implicitlyWait(TIMEOUT_CRWAL, TimeUnit.SECONDS);
 		driver.get(url);
@@ -48,7 +48,7 @@ public class SeleniumManager {
         return driver.getPageSource();
 	}
 
-	// ¸í½ÃÀû ´ë±â ÈÄ Å©·Ñ (Å¬·¡½º¸íÀÌ ·ÎµåµÉ¶§±îÁö ´ë±â, Å¬·¡½º°¡ ³¡±îÁö ¾Èº¸ÀÌ¸é ¿¹¿Ü¹ß»ı)
+	// ëª…ì‹œì  ëŒ€ê¸° í›„ í¬ë¡¤ (í´ë˜ìŠ¤ëª…ì´ ë¡œë“œë ë•Œê¹Œì§€ ëŒ€ê¸°, í´ë˜ìŠ¤ê°€ ëê¹Œì§€ ì•ˆë³´ì´ë©´ ì˜ˆì™¸ë°œìƒ)
 	public String explicitCrawl(String url, String className) throws Exception{
         WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_CRWAL);
         driver.get(url);
@@ -57,7 +57,7 @@ public class SeleniumManager {
         return driver.getPageSource();
 	}
 	
-	// ÀÌ°Å ¾ÈÇÏ¸é µå¶óÀÌ¹ö ÇÁ·Î¼¼½º´Â »ì¾ÆÀÖÀ½
+	// ì´ê±° ì•ˆí•˜ë©´ ë“œë¼ì´ë²„ í”„ë¡œì„¸ìŠ¤ëŠ” ì‚´ì•„ìˆìŒ
 	public void quit() {
 		driver.quit();
 	}
