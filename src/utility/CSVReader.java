@@ -26,16 +26,17 @@ public class CSVReader {
 	        while( (line = bufferedReader.readLine()) != null ) {
 	            String[] splited = line.split(",");
 	            String collect_day = splited[0];
-	            String good_id = splited[1];			// good_id를 저장하면, CSV파싱할 때 같은 상품인지 알 수 있다. 그래서 저장하는게 좋을것 같다..?
+	            String good_id = splited[1];			// good_id를 저장하면, CSV파싱할 때 같은 상품인지 알 수 있다. 그래서 저장하는게 좋을것 같다..? 근데 상품명이 없는 것도 있다.
 	            String pum_id = splited[2];				// 품목ID는 카테고리별로 분류하기위해 필요하다
 	            String good_name = splited[4];			
 	            String discount_price = splited[6];		//실판매가
 	            System.out.println("수집일자:" + collect_day + ", 상품ID:" + good_id + ", 품목ID:" + pum_id + ", 상품명:" + good_name + ", 가격:" + discount_price);
 	            
 	            // (디버깅용) 가격이 비어있는 항목 찾기
-	            if(discount_price == null || discount_price.isEmpty() || discount_price == "") {
+	            String searchTarget = good_id;
+	            if(searchTarget == null || searchTarget.isEmpty() || searchTarget == "") {
 	            	bufferedReader.close();
-	            	System.out.println("[가격이 비어있는 항목 발견!] " + splited.toString());
+	            	System.out.println("[비어있는 항목 발견!] ");
 	            	return;
 	            }
 	        }
