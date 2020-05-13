@@ -14,6 +14,7 @@ import java.sql.Date;
 import java.util.ArrayList;
 
 import db.CategoryManager;
+import db.ProductManager;
 import model.CSVProduct;
 import model.Category;
 import model.CollectedInfo;
@@ -84,11 +85,9 @@ public class CSVReader {
 			// 한 CSV 파일 읽기
 			ArrayList<CSVProduct> productList = readFile(filePath);
 			
-			// 여기서 바로 CSVProduct를 Product, CollectedInfo로 분리하고 DB에 올린다??
 			System.out.println("파일 덤프 시작 : " + filePath);
 			for(CSVProduct p : productList) {
-				SplitCSVProduct(p);
-				System.out.println(p.toString());
+				update(p);
 			}
 			System.out.println("파일 덤프 완료 : "  + filePath);
 		}
@@ -96,7 +95,7 @@ public class CSVReader {
 	
 	
 	// CSV에서 파싱한 상품을 상품정보/수집정보로 재생성한다. (품목정보는 신규인 경우 생성)
-	public void SplitCSVProduct(CSVProduct csvProduct) {
+	public void update(CSVProduct csvProduct) {
 		// 상품명과 품목정보id로 상품정보 생성
 		String productName = csvProduct.getProductName();
 		String categoryId = csvProduct.getCategoryId();
@@ -109,15 +108,30 @@ public class CSVReader {
 		
 		// 품목정보 id는 기존 DB에 있는지 조회한다. 없으면 새로 만든다.
 		CategoryManager cm = new CategoryManager();
+		Category category = new Category(categoryId, csvProduct.getCategoryName());
 		try {
-			if(cm.findCategoryById(categoryId) == null) {
-				String categoryName = csvProduct.getCategoryName();
-				cm.requestAddCategory(categoryId, categoryName);
+			if(cm.findByKey(category.getId()) == null) {
+				cm.requestAdd(category);
 			}
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log("CSVReader.SplitCSVProduct", e);
+			IOHandler.getInstance().log("CSVReader.SplitCSVProduct-requestAdd(category)", e);
 		}
+		
+		// 없는 품목(카테고리)은 앞에서 먼저 만들어줘야 무결성이 지켜짐.
+		try {
+			ProductManager pm = new ProductManager();
+			if(pm.findByKey(product.getName()) == null) {
+				// 신규 상품인 경우 상품정보테이블에 추가
+				pm.requestAdd(product);
+			}
+			// 신규 상품 아니면 pass!
+		}
+		catch(Exception e) {
+			IOHandler.getInstance().log("CSVReader.SplitCSVProduct-requestAdd(product)", e);
+		}
+		
+		// 여기서 수집정보 INSERT해줘야댐!
 		
 	}
 }
