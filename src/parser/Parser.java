@@ -14,7 +14,6 @@ import utility.IOHandler;
 public abstract class Parser {
 	
 	public void parse(String searchStr) {
-//		String searchStr = "포스틱(156G)";
 		String orgHtml = null;
 		SeleniumManager sm = null;
 		
@@ -34,7 +33,7 @@ public abstract class Parser {
 			System.out.println("검색 결과가 없거나 타임아웃 발생");
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log(e.getMessage());
+			IOHandler.getInstance().log("Parser.parse", e);
 		}
 		
 		if(sm != null) {
@@ -67,7 +66,7 @@ public abstract class Parser {
 			}
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log(e.getMessage());
+			IOHandler.getInstance().log("Parser.parseProduct", e);
 		}	
 	}
 	

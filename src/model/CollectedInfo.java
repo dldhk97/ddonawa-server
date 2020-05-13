@@ -3,6 +3,7 @@ package model;
 import java.io.Serializable;
 import java.sql.Date;
 
+//DB와 동일한 수집정보 클래스
 public class CollectedInfo implements Serializable{
 
 	private static final long serialVersionUID = 1L;
@@ -13,6 +14,21 @@ public class CollectedInfo implements Serializable{
 	private String url;				// URL
 	private long hits; 				// 조회수
 	private String thumbnail;		// 썸네일
+	
+	public CollectedInfo(String productName, Date collectedDate, double price) {
+		this.productName = productName;
+		this.collectedDate = collectedDate;
+		this.price = price;
+	}
+	
+	public CollectedInfo(String productName, Date collectedDate, double price, String url, long hits, String thumbnail) {
+		this.productName = productName;
+		this.collectedDate = collectedDate;
+		this.price = price;
+		this.url = url;
+		this.hits = hits;
+		this.thumbnail = thumbnail;
+	}
 	
 	public String getProductName() {
 		return productName;

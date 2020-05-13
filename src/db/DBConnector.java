@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import utility.IOHandler;
 
@@ -12,7 +13,7 @@ public class DBConnector {
 	// DB 접속용 변수
 	private final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver"; //드라이버
 	private final String DB_URL = "jdbc:mysql://localhost/ddonawa?characterEncoding=UTF-8&serverTimezone=UTC";	//접속할 서버
-	 
+	
 	private final String USER_NAME = "ddonawa"; //DB에 접속할 사용자 이름을 상수로 정의
 	private final String PASSWORD = "!1q2w3e4r"; //사용자의 비밀번호를 상수로 정의
 	
@@ -37,31 +38,48 @@ public class DBConnector {
 			state = connection.createStatement();
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log("[DBConnector.onCreate]" + e.getMessage());
+			IOHandler.getInstance().log("DBConnector.onCreate", e);
 		}
 	}
 	
-	public boolean Select() throws Exception{
-		String sql = "SELECT * FROM ddonawa.계정";
+	// sql문과 열 이름을 전달받으면 쿼리 후 해당되는 테이블을 받아옴
+	public ArrayList<ArrayList<String>> Select(String sql, ArrayList<String> columnNames) throws Exception{
 		ResultSet resultSet = state.executeQuery(sql);
+		ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
 		while(resultSet.next()) {
-			String id = resultSet.getString("id");
-			String password = resultSet.getString("pw");
-			System.out.println("id:" + id + ", pw:" + password);
+			ArrayList<String> row = new ArrayList<String>();
+			for(String cn : columnNames) {
+				row.add(resultSet.getString(cn));
+			}
+			result.add(row);
 		}
 		
 		resultSet.close();
-		return false;
+		return result;
 	}
 	
-	public boolean Insert() throws Exception{
-		String sql = "INSERT INTO `ddonawa`.`계정` (`id`, `pw`) VALUES ('user777', '8877');";
-		int cnt = state.executeUpdate(sql);
-		if(cnt > 0) {
-//			IOHandler.getInstance().log("`" + sql + "` INSERT 성공");
-			return true;
+	public int Insert(String sql) throws Exception{
+		return state.executeUpdate(sql);
+	}
+	
+	public int Insert(String dbName, String tableName, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
+		
+		StringBuilder sb = new StringBuilder("INSERT INTO `" + dbName + "`.`" + tableName + "` (");
+		for(String columnName : columnNames) {
+			sb.append("`" + columnName + "`, ");
 		}
-		return false;
+		sb.delete(sb.length()-2, sb.length());
+		sb.append(") VALUES (");
+		
+		for(String value : values) {
+			sb.append("'" + value + "', ");
+		}
+		sb.delete(sb.length() - 2, sb.length());
+		sb.append(");");
+		
+		String sql = sb.toString();
+		
+		return state.executeUpdate(sql);
 	}
 	
 	
@@ -76,7 +94,7 @@ public class DBConnector {
 			}			
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log("[DBConnector.finalize]" + e.getMessage());
+			IOHandler.getInstance().log("DBConnector.finalize", e);
 		}
 		
 		try {
@@ -85,7 +103,7 @@ public class DBConnector {
 			}			
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log("[DBConnector.finalize]" + e.getMessage());
+			IOHandler.getInstance().log("[DBConnector.finalize]", e);
 		}
 		IOHandler.getInstance().log("MYSQL Closed");
 	}

@@ -19,7 +19,13 @@ public class IOHandler {
 	// 콘솔 or 텍스트 파일에 로깅
 	public void log(String s) {
 		// [날짜+시간+사용자명]+오류명 이런식으로 로깅하게 할 예정임
-		System.out.println("[" + new Date() + ".Server]" + s);
+		System.out.println("[" + new Date() + "]" + s);
+	}
+	
+	// 예외 발생 시 사용할 수 있는 로그 메소드
+	public void log(String from, Exception e) {
+		System.out.println("[" + new Date() + "][" + from + "]\n" + e.getMessage());
+//		e.printStackTrace();
 	}
 	
 	public int getIntByUser() {
@@ -29,7 +35,7 @@ public class IOHandler {
 			return scn.nextInt();			
 		}
 		catch(Exception e) {
-			log(e.getMessage());
+			log("IOHandler.getIntByUser", e);
 			return -987654321;
 		}
 	}
@@ -44,7 +50,7 @@ public class IOHandler {
 			return scn.nextLine();			
 		}
 		catch(Exception e) {
-			log(e.getMessage());
+			log("IOHandler.getLineByUser",e);
 			return null;
 		}
 	}

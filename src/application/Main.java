@@ -37,30 +37,13 @@ public class Main {
 				case 3:
 					CSVReader cr = new CSVReader();
 					userInput = IOHandler.getInstance().getLineByUser("경로를 입력하세요.");
-					cr.read(userInput);
+					cr.dumpCSV(userInput);
 					break;
 				case 4:
-					try {
-						DBConnector.getInstance().Select();						
-					}
-					catch(Exception e) {
-						IOHandler.getInstance().log(e.getMessage());
-					}
+					System.out.println("deprecated됨");
 					break;
 				case 5:
-					try {
-						boolean isSucceed = DBConnector.getInstance().Insert();
-						if(isSucceed) {
-							IOHandler.getInstance().log("INSERT 성공");
-						}
-						else {
-							IOHandler.getInstance().log("INSERT 실패");
-						}
-								
-					}
-					catch(Exception e) {
-						IOHandler.getInstance().log(e.getMessage());
-					}
+					System.out.println("deprecated됨");
 					break;
 				case 6:
 					return;
@@ -70,7 +53,7 @@ public class Main {
 			}
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log(e.getMessage());
+			IOHandler.getInstance().log("[Main.run]", e);
 		}
 	}
 }

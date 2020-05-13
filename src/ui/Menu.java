@@ -8,7 +8,7 @@ public class Menu {
 	public void show() {
 		System.out.println("1. 다나와 파싱 테스트");
 		System.out.println("2. 네이버쇼핑 파싱 테스트");
-		System.out.println("3. CSV 파싱 테스트");
+		System.out.println("3. CSV 파일 덤프");
 		System.out.println("4. DB Select 테스트");
 		System.out.println("5. DB Insert 테스트");
 		System.out.println("6. 종료");
