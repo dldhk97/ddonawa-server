@@ -1,5 +1,6 @@
 package application;
 
+import db.DBConnector;
 import parser.DanawaParser;
 import parser.NaverShopParser;
 import ui.Menu;
@@ -39,6 +40,29 @@ public class Main {
 					cr.read(userInput);
 					break;
 				case 4:
+					try {
+						DBConnector.getInstance().Select();						
+					}
+					catch(Exception e) {
+						IOHandler.getInstance().log(e.getMessage());
+					}
+					break;
+				case 5:
+					try {
+						boolean isSucceed = DBConnector.getInstance().Insert();
+						if(isSucceed) {
+							IOHandler.getInstance().log("INSERT 성공");
+						}
+						else {
+							IOHandler.getInstance().log("INSERT 실패");
+						}
+								
+					}
+					catch(Exception e) {
+						IOHandler.getInstance().log(e.getMessage());
+					}
+					break;
+				case 6:
 					return;
 				default:
 					break;
