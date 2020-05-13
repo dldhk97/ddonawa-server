@@ -3,6 +3,7 @@ package application;
 import parser.DanawaParser;
 import parser.NaverShopParser;
 import ui.Menu;
+import utility.CSVReader;
 import utility.IOHandler;
 
 public class Main {
@@ -16,7 +17,7 @@ public class Main {
 		try {
 			Menu menu = new Menu();
 			menu.welcome();
-			String searchStr = null;
+			String userInput = null;
 			
 			while(true) {
 				menu.show();
@@ -24,15 +25,20 @@ public class Main {
 				switch(selected) {
 				case 1:
 					DanawaParser dp = new DanawaParser();
-					searchStr = IOHandler.getInstance().getLineByUser("검색어 : ");
-					dp.parse(searchStr);
+					userInput = IOHandler.getInstance().getLineByUser("검색어를 입력하세요.");
+					dp.parse(userInput);
 					break;
 				case 2:
 					NaverShopParser nsp = new NaverShopParser();
-					searchStr = IOHandler.getInstance().getLineByUser("검색어 : ");
-					nsp.parse(searchStr);
+					userInput = IOHandler.getInstance().getLineByUser("검색어를 입력하세요.");
+					nsp.parse(userInput);
 					break;
 				case 3:
+					CSVReader cr = new CSVReader();
+					userInput = IOHandler.getInstance().getLineByUser("경로를 입력하세요.");
+					cr.read(userInput);
+					break;
+				case 4:
 					return;
 				default:
 					break;
