@@ -125,15 +125,13 @@ public class CSVReader {
 		CategoryManager cm = new CategoryManager();
 		cm.insertIfNotExist(category);
 		
-		// 상품정보 없으면 DB에 등록
+		// 상품정보 없으면 상품정보를 DB에 등록
 		ProductManager pm = new ProductManager();
-		boolean isNewProduct = pm.insertIfNotExist(product);
+		pm.insertIfNotExist(product);
 		
-		// 새로운 상품이 아닌 경우 (상품정보가 있다는 뜻은 수집정보도 있다는 뜻) DB에 업데이트
-		if(!isNewProduct) {
-			CollectedInfoManager cim = new CollectedInfoManager();
-			cim.upsert(collectedInfo);
-		}
+		// 수집정보가 없으면 insert, 있으면 비교 후 낮은 가격이면 update 
+		CollectedInfoManager cim = new CollectedInfoManager();
+		cim.upsert(collectedInfo);
 
 	}
 	

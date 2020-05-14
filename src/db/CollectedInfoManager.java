@@ -105,14 +105,16 @@ public class CollectedInfoManager extends DBManager {
 		ArrayList<String> columns = new ArrayList<>(Arrays.asList(
 						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
 						DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString()				//price는 NOTNULL이라 기본생성에 포함시킴
+						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),				//가격는 NOTNULL이라 기본생성에 포함시킴
+						DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString()				//조회수는 비어있어도 0으로 넣음.
 						));
 		
 		// 품목정보 테이블에 추가할 데이터 정보 배열 생성
 		ArrayList<String> values = new ArrayList<>(Arrays.asList(
 						productName, 
 						collectedDate.toString(),
-						String.valueOf(price)
+						String.valueOf(price),
+						String.valueOf(hits)
 						));
 		
 		// NULL이 될 수 있는 속성들은 선택적 추가
@@ -121,8 +123,8 @@ public class CollectedInfoManager extends DBManager {
 			values.add(url);
 		}
 		if(hits != 0) {
-			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString());
-			values.add(String.valueOf(hits));
+			
+			
 		}
 		if(thumbnail != null) {
 			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_THUMBNAIL.toString());
@@ -155,30 +157,26 @@ public class CollectedInfoManager extends DBManager {
 		// 수집정보 테이블의 키 열 정보 생성
 		ArrayList<String> keyColumns = new ArrayList<>(Arrays.asList(
 						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString()
+						DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString(),
+						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),
+						DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString()
 						));
 		
 		// 수집정보 테이블의 키 데이터 정보 배열 생성
 		ArrayList<String> keyValues = new ArrayList<>(Arrays.asList(
 						productName, 
-						collectedDate.toString()
+						collectedDate.toString(),
+						String.valueOf(price),
+						String.valueOf(hits)
 						));
 		
-		// NULL이 될 수 있는 속성들은 선택적 추가
+		// 선택적으로 추가할 속성들
 		ArrayList<String> columns = new ArrayList<>();
 		ArrayList<String> values = new ArrayList<>();
 		
-		if(price != 0) {
-			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString());
-			values.add(String.valueOf(price));
-		}
 		if(url != null) {
 			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_URL.toString());
 			values.add(url);
-		}
-		if(hits != 0) {
-			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString());
-			values.add(String.valueOf(hits));
 		}
 		if(thumbnail != null) {
 			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_THUMBNAIL.toString());
