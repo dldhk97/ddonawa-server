@@ -3,6 +3,7 @@ package db;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
@@ -42,8 +43,15 @@ public class DBConnector {
 		}
 	}
 	
+	public boolean isConnected() throws Exception{
+		if(connection == null || connection.isClosed()) {
+			return false;
+		}
+		return true;
+	}
+	
 	// sql문과 열 이름을 전달받으면 쿼리 후 해당되는 테이블을 받아옴
-	public ArrayList<ArrayList<String>> Select(String sql, ArrayList<String> columnNames) throws Exception{
+	public ArrayList<ArrayList<String>> select(String sql, ArrayList<String> columnNames) throws Exception{
 		ResultSet resultSet = state.executeQuery(sql);
 		ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
 		while(resultSet.next()) {
@@ -58,17 +66,23 @@ public class DBConnector {
 		return result;
 	}
 	
-	public int Insert(String sql) throws Exception{
-		return state.executeUpdate(sql);
-	}
-	
-	public int Insert(String dbName, String tableName, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
+	public int insert(String dbName, String tableName, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
+		if(columnNames.size() != values.size()) {
+			throw new Exception("SQL INSERT FAILED:Diff size between columnNames and values");
+		}
 		
+		// 따옴표 처리 ex)[리바이스] LEVI'S 511 슬림핏 청바지_블루(04511-3231)
+		for(int i = 0 ; i < values.size() ; i++) {
+			String value = values.get(i);
+			values.set(i, value.replace("'", "''"));
+		}
+		
+		// SQL문 작성
 		StringBuilder sb = new StringBuilder("INSERT INTO `" + dbName + "`.`" + tableName + "` (");
 		for(String columnName : columnNames) {
 			sb.append("`" + columnName + "`, ");
 		}
-		sb.delete(sb.length()-2, sb.length());
+		sb.delete(sb.length() - 2, sb.length());
 		sb.append(") VALUES (");
 		
 		for(String value : values) {
@@ -79,6 +93,41 @@ public class DBConnector {
 		
 		String sql = sb.toString();
 		
+		// SQL문 실행
+		return state.executeUpdate(sql);
+	}
+	
+	public int update(String dbName, String tableName,  ArrayList<String> keyColumnNames, ArrayList<String> keyValues, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
+		if(keyColumnNames.size() != keyValues.size()) {
+			throw new Exception("SQL UPDATE FAILED:Diff size between keyColumnNames and keyValues");
+		}
+		else if(columnNames.size() != values.size()) {
+			throw new Exception("SQL UPDATE FAILED:Diff size between columnNames and values");
+		}
+		
+		// 따옴표 처리
+		for(int i = 0 ; i < values.size() ; i++) {
+			String value = values.get(i);
+			values.set(i, value.replace("'", "''"));
+		}
+		
+		// SQL문 작성
+		StringBuilder sb = new StringBuilder("UPDATE `" + dbName + "`.`" + tableName + "` SET ");
+		
+		for(int i = 0 ; i < columnNames.size() ; i++) {
+			sb.append("`" + columnNames.get(i) + "` = '" + values.get(i) +"', ");
+		}
+		sb.delete(sb.length() - 2, sb.length());
+		sb.append(" WHERE ");
+		
+		for(int i = 0 ; i < keyColumnNames.size() ; i++) {
+			sb.append("`" + keyColumnNames.get(i) + "` = '" + keyValues.get(i) + "' AND ");
+		}
+		sb.delete(sb.length() - 5, sb.length());
+		
+		String sql = sb.toString();
+		
+		// SQL문 실행
 		return state.executeUpdate(sql);
 	}
 	

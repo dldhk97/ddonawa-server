@@ -14,6 +14,8 @@ import java.sql.Date;
 import java.util.ArrayList;
 
 import db.CategoryManager;
+import db.CollectedInfoManager;
+import db.DBConnector;
 import db.ProductManager;
 import model.CSVProduct;
 import model.Category;
@@ -22,12 +24,66 @@ import model.Product;
 
 public class CSVReader {
 	
+	// 주어진 경로 내에 존재하는 CSV파일을 읽고 DB에 올린다. 하위 폴더까지는 찾지 않음.
+	public void dumpCSV(String path) {
+		File dir = new File(path);
+		
+		try {
+			// csv로 끝나는 파일만 가져온다.
+			String[] fileList = dir.list(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".csv");
+				}
+			});
+			
+			// 탐색한 모든 .csv 파일에 대하여 파싱
+			for(String fileName : fileList) {
+				String filePath = null;
+				
+				// 사용자가 준 경로에 맞게 파일명을 붙여 절대경로로 만듦.
+				if(path.endsWith("\\")) {
+					filePath = path + fileName;
+				}
+				else {
+					filePath = path + "\\" + fileName;
+				}
+				
+				// 한 CSV 파일 읽기
+				ArrayList<CSVProduct> productList = readFile(filePath);
+				
+				// DB 연결 확인
+				if(!DBConnector.getInstance().isConnected()) {
+		    		IOHandler.getInstance().log("[CSVReader.dumpCSV]DB에 연결할 수 없음");
+					return;
+				}
+				
+				// DB에 업데이트
+				int cnt = 0;
+				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 시작(총 " + productList.size() + "개)");
+				for(CSVProduct p : productList) {
+					update(p);
+					
+					// 1000항목당 한번씩 알림
+					if(cnt % 1000 == 0) {
+						IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 중(" + cnt + "/" + productList.size() + ")");
+					}
+					cnt++;
+				}
+				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 완료(총 " + productList.size() + "개)");
+			}
+		}
+		catch(Exception e) {
+			IOHandler.getInstance().log("CSVReader.dumpCSV-Unknown",e);
+		}
+	}
+	
 	// 하나의 CSV 파일을 읽고 CSVProduct 배열 반환하는 메소드
-	public ArrayList<CSVProduct> readFile(String filePath) {
-		FileInputStream input;
+	private ArrayList<CSVProduct> readFile(String filePath) {
 		ArrayList<CSVProduct> result = new ArrayList<CSVProduct>();
+		
 	    try {
-	        input = new FileInputStream(new File(filePath));
+	    	FileInputStream input = new FileInputStream(new File(filePath));
 	        CharsetDecoder decoder = Charset.forName("EUC-KR").newDecoder();
 	        decoder.onMalformedInput(CodingErrorAction.IGNORE);
 	        InputStreamReader reader = new InputStreamReader(input, decoder);
@@ -47,7 +103,7 @@ public class CSVReader {
 	            result.add(product);
 	        }
 	        bufferedReader.close();
-	        System.out.println("CSV 파싱 완료!");
+	        IOHandler.getInstance().log("CSV 파싱 완료!");
 	    } catch (FileNotFoundException e) {
 	        IOHandler.getInstance().log("CSVReader.read-FileNotFound", e);
 	    } catch( IOException e ) {
@@ -58,80 +114,57 @@ public class CSVReader {
 	    return result;
 	}
 	
-	// 주어진 경로 내에 존재하는 CSV파일을 읽고 DB에 올린다. 하위 폴더까지는 찾지 않음.
-	public void dumpCSV(String path) {
-		File dir = new File(path);
+	
+	// CSV에서 파싱한 상품을 상품정보/수집정보로 분리 후 DB에 업로드한다.
+	public void update(CSVProduct csvProduct) throws Exception {
+		Product product = createProduct(csvProduct);
+		CollectedInfo collectedInfo = createCollectedinfo(csvProduct);
+		Category category = createCategory(csvProduct);
 		
-		// csv로 끝나는 파일만 가져온다.
-		String[] fileList = dir.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".csv");
-			}
-		});
+		// 품목정보 없으면 DB에 등록
+		CategoryManager cm = new CategoryManager();
+		cm.insertIfNotExist(category);
 		
-		// 탐색한 모든 .csv 파일에 대하여
-		for(String fileName : fileList) {
-			String filePath = null;
-			
-			// 사용자가 준 경로에 맞게 파일명을 붙여 절대경로로 만듦.
-			if(path.endsWith("\\")) {
-				filePath = path + fileName;
-			}
-			else {
-				filePath = path + "\\" + fileName;
-			}
-			
-			// 한 CSV 파일 읽기
-			ArrayList<CSVProduct> productList = readFile(filePath);
-			
-			System.out.println("파일 덤프 시작 : " + filePath);
-			for(CSVProduct p : productList) {
-				update(p);
-			}
-			System.out.println("파일 덤프 완료 : "  + filePath);
+		// 상품정보 없으면 DB에 등록
+		ProductManager pm = new ProductManager();
+		boolean isNewProduct = pm.insertIfNotExist(product);
+		
+		// 새로운 상품이 아닌 경우 (상품정보가 있다는 뜻은 수집정보도 있다는 뜻) DB에 업데이트
+		if(!isNewProduct) {
+			CollectedInfoManager cim = new CollectedInfoManager();
+			cim.upsert(collectedInfo);
 		}
+
 	}
 	
-	
-	// CSV에서 파싱한 상품을 상품정보/수집정보로 재생성한다. (품목정보는 신규인 경우 생성)
-	public void update(CSVProduct csvProduct) {
+	// CSV에서 추출한 CSVProduct 객체를 Product(상품정보) 객체로 변환
+	private Product createProduct(CSVProduct csvProduct) {
 		// 상품명과 품목정보id로 상품정보 생성
 		String productName = csvProduct.getProductName();
 		String categoryId = csvProduct.getCategoryId();
-		Product product = new Product(productName, categoryId);
 		
-		// CSV정보를 형변환시켜서 수집정보 생성
+		Product product = new Product(productName, categoryId);
+		return product;
+	}
+	
+	// CSV에서 추출한 CSVProduct 객체를 CollectedInfo(수집정보) 객체로 변환
+	private CollectedInfo createCollectedinfo(CSVProduct csvProduct) {
+		String productName = csvProduct.getProductName();
 		Date collectedDate = Date.valueOf(csvProduct.getCollectedDate());
 		double price = Double.parseDouble(csvProduct.getPrice());
-		CollectedInfo collectedInfo = new CollectedInfo(productName, collectedDate, price);
 		
-		// 품목정보 id는 기존 DB에 있는지 조회한다. 없으면 새로 만든다.
-		CategoryManager cm = new CategoryManager();
-		Category category = new Category(categoryId, csvProduct.getCategoryName());
-		try {
-			if(cm.findByKey(category.getId()) == null) {
-				cm.requestAdd(category);
-			}
-		}
-		catch(Exception e) {
-			IOHandler.getInstance().log("CSVReader.SplitCSVProduct-requestAdd(category)", e);
-		}
-		
-		// 없는 품목(카테고리)은 앞에서 먼저 만들어줘야 무결성이 지켜짐.
-		try {
-			ProductManager pm = new ProductManager();
-			if(pm.findByKey(product.getName()) == null) {
-				// 신규 상품인 경우 상품정보테이블에 추가
-				pm.requestAdd(product);
-			}
-			// 신규 상품 아니면 pass!
-		}
-		catch(Exception e) {
-			IOHandler.getInstance().log("CSVReader.SplitCSVProduct-requestAdd(product)", e);
-		}
-		
-		// 여기서 수집정보 INSERT해줘야댐!
-		
+		// CSV에서 추출한 정보는 조회수를 0으로 설정
+		CollectedInfo collectedInfo = new CollectedInfo(productName, collectedDate, price, null, 0, null);
+		return collectedInfo;
 	}
+	
+	// CSV에서 추출한 CSVProduct 객체를 Category(품목정보) 객체로 변환
+	private Category createCategory(CSVProduct csvProduct) {
+		String categoryId = csvProduct.getCategoryId();
+		String categoryName = csvProduct.getCategoryName();
+		
+		Category category = new Category(categoryId, categoryName);
+		return category;
+	}
+	
 }
