@@ -1,4 +1,4 @@
-package utility;
+package task;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,6 +21,7 @@ import model.CSVProduct;
 import model.Category;
 import model.CollectedInfo;
 import model.Product;
+import utility.IOHandler;
 
 public class CSVReader {
 	

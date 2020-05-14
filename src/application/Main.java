@@ -3,8 +3,8 @@ package application;
 import db.DBConnector;
 import parser.DanawaParser;
 import parser.NaverShopParser;
+import task.CSVReader;
 import ui.Menu;
-import utility.CSVReader;
 import utility.IOHandler;
 
 public class Main {
