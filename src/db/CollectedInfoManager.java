@@ -211,23 +211,29 @@ public class CollectedInfoManager extends DBManager {
 				collectedDate
 				));
 		
-		// 키값(상품명, 날짜)으로 탐색
-		CollectedInfo previousInfo = (CollectedInfo) findByKey(keys);
-		
-		// 수집정보가 존재하지 않는 경우 해당 날짜에 없는 정보이므로 삽입
-		if(previousInfo == null) {
-			cnt = insert(collectedInfo);
-		}
-		else {
-			// 이전 수집정보가 존재하면 가격을 비교해서 낮으면 update한다.
-			if(previousInfo.getPrice() > collectedInfo.getPrice()) {
-				IOHandler.getInstance().log("[수집정보] " + collectedDate + ", " + productName + ", " + previousInfo.getPrice() + "->" + collectedInfo.getPrice());
-				cnt = update(collectedInfo);							// 만약 CSV파일이 더 싸서 기존 정보를 대체할 때, 이전 썸네일 정보를 복사해서 쓰는가?? 일단 복사 안한다고 생각함.
+		try {
+			// 키값(상품명, 날짜)으로 탐색
+			CollectedInfo previousInfo = (CollectedInfo) findByKey(keys);
+			
+			// 수집정보가 존재하지 않는 경우 해당 날짜에 없는 정보이므로 삽입
+			if(previousInfo == null) {
+				cnt = insert(collectedInfo);
+			}
+			else {
+				// 이전 수집정보가 존재하면 가격을 비교해서 낮으면 update한다.
+				if(previousInfo.getPrice() > collectedInfo.getPrice()) {
+//					IOHandler.getInstance().log("[수집정보] " + collectedDate + ", " + productName + ", " + previousInfo.getPrice() + "->" + collectedInfo.getPrice());
+					cnt = update(collectedInfo);							// 만약 CSV파일이 더 싸서 기존 정보를 대체할 때, 이전 썸네일 정보를 복사해서 쓰는가?? 일단 복사 안한다고 생각함.
+				}
 			}
 		}
+		catch(Exception e) {
+			IOHandler.getInstance().log("[CollectedInfoManager.upsert]", e);
+			throw e;
+		}
 		
-//		if(cnt <= 0) {
-//			IOHandler.getInstance().log("[SYSTEM]신규 수집정보 " + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString() + " 갱신에 실패했거나 갱신하지 않음.");
+//		if(cnt > 0) {
+//			IOHandler.getInstance().log("[수집정보] " + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString() + " 갱신함.");
 //		}
 		
 		return cnt > 0 ? true : false;

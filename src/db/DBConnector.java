@@ -105,7 +105,13 @@ public class DBConnector {
 			throw new Exception("SQL UPDATE FAILED:Diff size between columnNames and values");
 		}
 		
-		// 따옴표 처리
+		// keyValues 따옴표 처리
+		for(int i = 0 ; i < keyValues.size() ; i++) {
+			String keyValue = keyValues.get(i);
+			keyValues.set(i, keyValue.replace("'", "''"));
+		}
+		
+		// values 따옴표 처리
 		for(int i = 0 ; i < values.size() ; i++) {
 			String value = values.get(i);
 			values.set(i, value.replace("'", "''"));
