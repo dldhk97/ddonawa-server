@@ -156,23 +156,25 @@ public class CollectedInfoManager extends DBManager {
 		
 		// 수집정보 테이블의 키 열 정보 생성
 		ArrayList<String> keyColumns = new ArrayList<>(Arrays.asList(
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString()
-						));
+					DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
+					DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString()
+					));
 		
 		// 수집정보 테이블의 키 데이터 정보 배열 생성
 		ArrayList<String> keyValues = new ArrayList<>(Arrays.asList(
-						productName, 
-						collectedDate.toString(),
-						String.valueOf(price),
-						String.valueOf(hits)
-						));
+					productName, 
+					collectedDate.toString()
+					));
 		
-		// 선택적으로 추가할 속성들
-		ArrayList<String> columns = new ArrayList<>();
-		ArrayList<String> values = new ArrayList<>();
+		// 선택적으로 추가할 속성들의 속성명과 값 설정
+		ArrayList<String> columns = new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),		// 가격은 NOT NULL
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString()		// 조회수는 NULL이라도 0으로 처리해서 사실상 NOT NULL
+				));
+		ArrayList<String> values = new ArrayList<>(Arrays.asList(
+				String.valueOf(price),
+				String.valueOf(hits)
+				));
 		
 		if(url != null) {
 			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_URL.toString());

@@ -82,13 +82,17 @@ public class DBConnector {
 		for(String columnName : columnNames) {
 			sb.append("`" + columnName + "`, ");
 		}
-		sb.delete(sb.length() - 2, sb.length());
+		if(columnNames.size() > 0) {
+			sb.delete(sb.length() - 2, sb.length());
+		}
 		sb.append(") VALUES (");
 		
 		for(String value : values) {
 			sb.append("'" + value + "', ");
 		}
-		sb.delete(sb.length() - 2, sb.length());
+		if(values.size() > 0) {
+			sb.delete(sb.length() - 2, sb.length());
+		}
 		sb.append(");");
 		
 		String sql = sb.toString();
@@ -97,6 +101,7 @@ public class DBConnector {
 		return state.executeUpdate(sql);
 	}
 	
+	// 키 속성, 키 값이 일치하는 항목의 속성, 값을 변경함
 	public int update(String dbName, String tableName,  ArrayList<String> keyColumnNames, ArrayList<String> keyValues, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
 		if(keyColumnNames.size() != keyValues.size()) {
 			throw new Exception("SQL UPDATE FAILED:Diff size between keyColumnNames and keyValues");
@@ -123,13 +128,17 @@ public class DBConnector {
 		for(int i = 0 ; i < columnNames.size() ; i++) {
 			sb.append("`" + columnNames.get(i) + "` = '" + values.get(i) +"', ");
 		}
-		sb.delete(sb.length() - 2, sb.length());
+		if(columnNames.size() > 0) {
+			sb.delete(sb.length() - 2, sb.length());
+		}
 		sb.append(" WHERE ");
 		
 		for(int i = 0 ; i < keyColumnNames.size() ; i++) {
 			sb.append("`" + keyColumnNames.get(i) + "` = '" + keyValues.get(i) + "' AND ");
 		}
-		sb.delete(sb.length() - 5, sb.length());
+		if(keyColumnNames.size() > 0) {
+			sb.delete(sb.length() - 5, sb.length());
+		}
 		
 		String sql = sb.toString();
 		
