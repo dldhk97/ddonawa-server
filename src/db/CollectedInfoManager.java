@@ -4,8 +4,10 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import model.BigCategory;
 import model.Category;
 import model.CollectedInfo;
+import model.Product;
 import utility.IOHandler;
 
 public class CollectedInfoManager extends DBManager {
@@ -224,9 +226,7 @@ public class CollectedInfoManager extends DBManager {
 				String prevThumbnail = previousInfo.getThumbnail();
 				
 				// 이전 수집정보가 존재하면 가격을 비교해서 낮으면 update한다.
-				if(previousInfo.getPrice() > newInfo.getPrice()) {
-//					IOHandler.getInstance().log("[수집정보] " + collectedDate + ", " + productName + ", " + previousInfo.getPrice() + "->" + collectedInfo.getPrice());
-					
+				if(previousInfo.getPrice() > newInfo.getPrice()) {		
 					// 만약 신규 정보의 썸네일이 없으면 이전 썸네일을 복사한다.
 					if(newThumbnail == null ||newThumbnail.isEmpty()) {
 						newInfo.setThumbnail(prevThumbnail);
@@ -246,10 +246,6 @@ public class CollectedInfoManager extends DBManager {
 			IOHandler.getInstance().log("[CollectedInfoManager.upsert]", e);
 			throw e;
 		}
-		
-//		if(cnt > 0) {
-//			IOHandler.getInstance().log("[수집정보] " + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString() + " 갱신함.");
-//		}
 		
 		return cnt > 0 ? true : false;
 	}

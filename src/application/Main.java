@@ -3,10 +3,7 @@ package application;
 import java.util.ArrayList;
 
 import db.DBConnector;
-import db.ProductManager;
 import model.Product;
-import parser.DanawaParser;
-import parser.NaverShopParser;
 import parser.SeleniumManager;
 import task.CSVReader;
 import task.CollectedInfoTask;
@@ -14,15 +11,24 @@ import task.ProductTask;
 import ui.Menu;
 import utility.IOHandler;
 
-public class Main {
+public class Main{
 
 	public static void main(String[] args) {
 		run();
-		System.out.println("종료됨");
 	}
 	
 	private static void run() {
 		try {
+			// 프로그램이 종료될 때 호출되는 메소드
+			Runtime rt = Runtime.getRuntime();
+			rt.addShutdownHook(new Thread() {
+				public void run() {
+					SeleniumManager.getInstance().quit();
+					DBConnector.getInstance().close();
+					IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
+				}
+			});
+			
 			Menu menu = new Menu();
 			menu.welcome();
 			String userInput = null;
@@ -38,6 +44,10 @@ public class Main {
 					userInput = IOHandler.getInstance().getLineByUser("DB에서 상품정보를 찾습니다. 검색어를 입력하세요.");
 					
 					ArrayList<Product> productList = pt.search(userInput);
+					if(productList == null) {
+						IOHandler.getInstance().log("검색 결과가 없습니다.");
+						break;
+					}
 					int cnt = 0;
 					for(Product p : productList) {
 						System.out.println(cnt + ". " + p.getName());
@@ -45,6 +55,7 @@ public class Main {
 					}
 					selected = IOHandler.getInstance().getIntByUser("수집정보를 갱신할 상품의 인덱스를 입력하세요.");
 					cit.collect(productList.get(selected));
+					
 					break;
 				case 2:
 					CSVReader cr = new CSVReader();
@@ -57,7 +68,6 @@ public class Main {
 					pt2.search(userInput);
 					break;
 				case 4:
-					onDestroy();
 					return;
 				default:
 					break;
@@ -69,8 +79,4 @@ public class Main {
 		}
 	}
 	
-	private static void onDestroy() {
-		SeleniumManager.getInstance().quit();
-		DBConnector.getInstance().close();
-	}
 }

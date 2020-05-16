@@ -164,7 +164,7 @@ public class DBConnector {
 		catch(Exception e) {
 			IOHandler.getInstance().log("[DBConnector.finalize]", e);
 		}
-		IOHandler.getInstance().log("MYSQL Closed");
+		IOHandler.getInstance().log("[SYSTEM]MYSQL Closed");
 	}
 	
 	@Override

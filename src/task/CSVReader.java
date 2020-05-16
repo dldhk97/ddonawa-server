@@ -118,29 +118,36 @@ public class CSVReader {
 	}
 	
 	
-	// CSV에서 파싱한 상품을 상품정보/수집정보로 분리 후 DB에 업로드한다.
+	// CSV에서 파싱한 상품을 대품목정보/품목정보/상품정보/수집정보로 분리 후 DB에 업로드한다.
 	public void update(CSVProduct csvProduct) throws Exception {
+		BigCategory bigCategory = createBigCategory(csvProduct);
+		Category category = createCategory(csvProduct);
 		Product product = createProduct(csvProduct);
 		CollectedInfo collectedInfo = createCollectedinfo(csvProduct);
-		Category category = createCategory(csvProduct);
-		BigCategory bigCategory = createBigCategory(csvProduct);
 		
 		// 대품목정보 없으면 DB에 등록
 		BigCategoryManager bcm = new BigCategoryManager();
-		bcm.insertIfNotExist(bigCategory);
+		if(!bcm.insertIfNotExist(bigCategory)) {
+			return;
+		}
 		
 		// 품목정보 없으면 DB에 등록
 		CategoryManager cm = new CategoryManager();
-		cm.insertIfNotExist(category);
+		if(!cm.insertIfNotExist(category)) {
+			return;
+		}
 		
 		// 상품정보 없으면 상품정보를 DB에 등록
 		ProductManager pm = new ProductManager();
-		pm.insertIfNotExist(product);
+		if(!pm.insertIfNotExist(product)) {
+			return;
+		}
 		
 		// 수집정보가 없으면 insert, 있으면 비교 후 낮은 가격이면 update 
 		CollectedInfoManager cim = new CollectedInfoManager();
-		cim.upsert(collectedInfo);
-
+		if(!cim.upsert(collectedInfo)) {
+			return;
+		}
 	}
 	
 	// CSV에서 추출한 CSVProduct 객체를 Product(상품정보) 객체로 변환
