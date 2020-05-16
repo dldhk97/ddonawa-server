@@ -49,6 +49,12 @@ public abstract class Parser {
 			// 결과 html 문자열을 document 형태로 변환
 			Document doc = Jsoup.parse(html);
 			
+			// 검색 정확도가 낮은지 체크한다. (네이버쇼핑만 체크함. 다나와는 부정확하면 아예 안뜬다)
+			Elements lowAccuracyCheck = doc.getElementsByClass(getLowAccuracyClassName());
+			if(isLowAccuracy(lowAccuracyCheck)) {
+				return null;
+			}
+			
 			// 클래스명으로 선택
 			Elements products = doc.getElementsByClass(getProductClassName());
 			if(products.size() > 0){
@@ -83,11 +89,15 @@ public abstract class Parser {
 	protected abstract String getBaseUrl();			// 다나와파서면 다나와의 URL을, 네이버파서면 네이버의 URL을 가져옴 
 	protected abstract String getProductClassName();	// 클래스에 맞게 상품을 특정하는 html-className을 가져옴
 	protected abstract String getExplicitClassName();
+    protected abstract String getLowAccuracyClassName();
 	
 	// HTML 파싱
 	protected abstract String getHref(Element product);
 	protected abstract String getThumbnailUrl(Element product);
 	protected abstract String getProductName(Element product);
 	protected abstract String getPrice(Element product);
+	
+	// 검색 결과가 부정확한지 체크
+	protected abstract boolean isLowAccuracy(Elements elems);
 
 }

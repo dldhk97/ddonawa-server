@@ -40,7 +40,7 @@ public class IOHandler {
 		}
 		catch(Exception e) {
 			log("IOHandler.getIntByUser", e);
-			return -987654321;
+			return -1;
 		}
 	}
 	

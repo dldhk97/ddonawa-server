@@ -10,6 +10,8 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import utility.IOHandler;
+
 public class SeleniumManager {
 	// 싱글톤이다.
 	private static SeleniumManager _instance;
@@ -71,5 +73,6 @@ public class SeleniumManager {
 		if(driver != null) {
 			driver.quit();
 		}
+		IOHandler.getInstance().log("[SYSTEM]Selenium driver Closed");
 	}
 }

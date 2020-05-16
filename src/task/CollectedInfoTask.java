@@ -3,7 +3,6 @@ package task;
 import java.util.ArrayList;
 
 import db.CollectedInfoManager;
-import db.ProductManager;
 import model.CollectedInfo;
 import model.Product;
 import parser.DanawaParser;
@@ -11,7 +10,8 @@ import parser.NaverShopParser;
 import utility.IOHandler;
 
 public class CollectedInfoTask {
-	private final int MIN_CODE_RECOGNIZE_LENGTH = 5;		// n자리 이상부터 연속된 A-Za-z0-9는 코드로 인식함. 정확성 상승을 위해 사용됨.
+	private final int MIN_CODE_RECOGNIZE_LENGTH = 4;		// n자리 이상부터 A-Za-z0-9로 시작하고 끝나는 단어는 코드로 인식함. 정확성 상승을 위해 사용됨.
+	private final int MAX_SIMILAR_POINT = 40;				// 유사도가 n이하는 되어야 고려대상으로 하겠다는 의미. 유사도는 0에 가까울수록 원본과 유사한 것이다.
 	
 	// 상품정보로 다나와와 네이버쇼핑 파싱 후 가격 비교, DB에 누적
 	public boolean collect(Product product) {
@@ -25,23 +25,12 @@ public class CollectedInfoTask {
 			ArrayList<CollectedInfo> naverShopResults = nsp.parse(product.getName());
 			
 			// 정확한 수집정보 선정을 위한 유사도 필터링
-			IOHandler.getInstance().log("---------------- 다나와 --------------------");
-			danawaResults = excludeInaccurateInfo(product, danawaResults);
-			IOHandler.getInstance().log("---------------- 네이버쇼핑 --------------------");
-			naverShopResults = excludeInaccurateInfo(product, naverShopResults);
+			danawaResults = filtering(product, danawaResults);
+			naverShopResults = filtering(product, naverShopResults);
 			
 			// 목록 중 가장 저렴한 수집정보 선정
 			CollectedInfo danawaInfo = getMostInexpensive(danawaResults);
 			CollectedInfo naverShopInfo = getMostInexpensive(naverShopResults);
-			
-			IOHandler.getInstance().log("상품명(검색어) : " + product.getName());
-			
-			if(danawaInfo != null) {
-				IOHandler.getInstance().log("다나와 최저가 상품 : " + danawaInfo.getProductName() + ", 가격 : " + danawaInfo.getPrice());
-			}
-			if (naverShopInfo != null) {
-				IOHandler.getInstance().log("네이버 최저가 상품 : " + naverShopInfo.getProductName() + ", 가격 : " + naverShopInfo.getPrice());
-			}
 			
 			if(danawaInfo == null && naverShopInfo == null) {
 				return false;
@@ -56,11 +45,24 @@ public class CollectedInfoTask {
 				targetInfo = danawaInfo != null ? danawaInfo : naverShopInfo;
 			}
 			
+			if(danawaInfo != null) {
+				IOHandler.getInstance().log("[DEBUG]다나와 최저가 상품 : " + danawaInfo.getProductName() + ", 가격 : " + danawaInfo.getPrice());
+			}
+			if (naverShopInfo != null) {
+				IOHandler.getInstance().log("[DEBUG]네이버 최저가 상품 : " + naverShopInfo.getProductName() + ", 가격 : " + naverShopInfo.getPrice());
+			}
+			IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + targetInfo.getProductName() + ", 가격 : " + targetInfo.getPrice());
+			IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
+			
 			if(targetInfo != null) {
 				// 파싱된 상품명을 DB에 있는 상품명으로 교체
 				targetInfo.setProductName(product.getName());
 				CollectedInfoManager cim = new CollectedInfoManager();
-//				cim.upsert(targetInfo);
+				boolean isUpserted = cim.upsert(targetInfo);						// 웹에서 파싱한 최종 최저가 상품을 DB에 업데이트함.
+				if(isUpserted) {
+					IOHandler.getInstance().log("[파싱 수집정보 DB에 갱신 성공]" + product.getName() + ", 가격 : " + targetInfo.getPrice());
+				}
+				return true;
 			}
 		}
 		catch(Exception e) {
@@ -71,49 +73,92 @@ public class CollectedInfoTask {
 	}
 	
 	// 수집정보 목록 중 상품명과 비교해서 부정확한 수집정보는 배제한다.
-	private ArrayList<CollectedInfo> excludeInaccurateInfo(Product product, ArrayList<CollectedInfo> infoList) {
+	private ArrayList<CollectedInfo> filtering(Product product, ArrayList<CollectedInfo> infoList) {
 		if(infoList == null) {
 			return null;
 		}
 		
-		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
-		
-		// 필터 1 : 상품명에 코드가 있다면, 해당 코드가 있는 수집정보만 남긴다.
-		String code = findCode(product.getName());
-		if(code != null) {
+		try {
+			IOHandler.getInstance().log("[DEBUG]-------------------원본-------------------");
+			int debugCnt = 0;
 			for(CollectedInfo c : infoList) {
-				if(c.getProductName().contains(code)) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
+			
+			// 필터 1 : 상품명에 코드가 있다면, 해당되는 수집정보만 남긴다.
+			ArrayList<CollectedInfo> result = codeFilter(product, infoList);
+			
+			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
+			debugCnt = 0;
+			for(CollectedInfo c : result) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
+			
+			// 필터 2 : 유사도를 비교한다. 현재 유사도는 n 이하이면 통과 목적으로만 사용됨.
+			result = simliarFilter(product, result);
+			
+			IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
+			debugCnt = 0;
+			for(CollectedInfo c : result) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
+			return result;
+		}
+		catch(Exception e) {
+			IOHandler.getInstance().log("CollectedInfoTask.filtering", e);
+		}
+		
+		return null;
+	}
+	
+	// 1차 필터 : 상품명에 코드가 있다면, 해당 코드가 있는 수집정보만 남긴다.
+	private ArrayList<CollectedInfo> codeFilter(Product product, ArrayList<CollectedInfo> infoList){
+		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
+		String target = findCode(product.getName());
+		
+		if(target != null) {
+			for(CollectedInfo c : infoList) {
+				if(c.getProductName().contains(target)) {
 					result.add(c);
 				}
 			}
+			return result.size() > 0 ? result : null;
 		}
 		else {
-			result = infoList;
+			return infoList;
 		}
-		
-		IOHandler.getInstance().log("------------코드(" + code + ") 필터링 이후--------------");
-		
-		// 필터 2 : 유사도를 비교한다.
-		for(CollectedInfo c : result) {
-			// 유사도 비교
-			int x = levenshteinDistance(product.getName(), c.getProductName());
-			IOHandler.getInstance().log("상품명 : " + c.getProductName() + ", 가격 : " + c.getPrice() + ", 유사도 : " + x);
-		}
-		return result;
 	}
 	
-	// 문자열에서 코드로 인식하는 문자열을 찾음.
+	// 2차 필터 : 유사도를 비교한다. 현재 유사도는 n 이하이면 통과 목적으로만 사용됨.
+	private ArrayList<CollectedInfo> simliarFilter(Product product, ArrayList<CollectedInfo> infoList){
+		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
+		
+		for(CollectedInfo c : infoList) {
+			// 유사도 비교
+			int similarPoint = levenshteinDistance(product.getName(), c.getProductName());
+			if(similarPoint <= MAX_SIMILAR_POINT) {
+				result.add(c);
+			}
+		}
+		return result.size() > 0 ? result : null;
+	}
+	
+	// ---------------------------------------------------------------- //
+	
+	
+	// 코드란 A-Za-z0-9로 시작하거나 끝나는 연속된 문자열(n자리 이상)을 말한다.(n=MIN_CODE_RECOGNIZE_LENGTH)
 	private String findCode(String str) {
 		String code = null;
 		// 문자열 내 영어 혹은 숫자가 있는 경우
 		if(str.matches(".*[A-Za-z0-9].*")) {
+			// 괄호는 공백으로 치환하자.
+			str = str.replaceAll("[\\[\\](){}]", " ");
 			// 공백으로 분리한다.
-			
 			for(String word : str.split(" ")) {
 				// 코드로 인식 가능한 최소 길이 이상이면 연속적인 영어/숫자인지 확인
 				if(word.length() >= MIN_CODE_RECOGNIZE_LENGTH) {
-					// 영어/숫자로 시작하고 영어/숫자로 끝나는지 체크
-					if(word.matches("^[A-Za-z0-9]*-*_*[A-Za-z0-9]*$")) {
+					// 영어/숫자로 시작하고 영어/숫자로 끝나는지 체크 중간에 - _ + 가 있어도 된다.
+					if(word.matches("^[A-Za-z0-9]*-*_*\\+*[A-Za-z0-9]*$")) {
 						// 길이가 긴 녀석을 코드로 쓴다.
 						if(code == null) {
 							code = word;
@@ -127,6 +172,7 @@ public class CollectedInfoTask {
 		}
 		return code;
 	}
+	
 	
 	// 가장 저렴한 상품 선택하여 반환
 	private CollectedInfo getMostInexpensive(ArrayList<CollectedInfo> infoList) {
