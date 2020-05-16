@@ -48,7 +48,7 @@ public class ConsoleTask {
 	private Product selectProduct(ArrayList<Product> productList) {
 		int cnt = 0;
 		for(Product p : productList) {
-			System.out.println(cnt++ + ". " + p.getName());
+			System.out.println("\t" + cnt++ + ". " + p.getName());
 		}
 		int selected = IOHandler.getInstance().getIntByUser("[SYSTEM]원하는 상품의 인덱스를 입력하세요.");
 		return productList.get(selected);
@@ -92,7 +92,7 @@ public class ConsoleTask {
 			IOHandler.getInstance().log("[SYSTEM]해당되는 상품의 수집정보 목록입니다.");
 			int cnt = 0;
 			for(CollectedInfo c : collectedInfoList) {
-				System.out.println(cnt++ + ". " +
+				System.out.println("\t" + cnt++ + ". " +
 						c.getProductName() + ", " +
 						c.getCollectedDate().toString() + ", " +
 						c.getPrice() + ", " +
