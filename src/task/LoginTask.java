@@ -8,7 +8,7 @@ import enums.LoginResult;
 import model.Account;
 import utility.IOHandler;
 
-public class LoginManager {
+public class LoginTask {
 	public LoginResult tryLogin(Account account) throws Exception{
 		AccountManager am = new AccountManager();
 		try {

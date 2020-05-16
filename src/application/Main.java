@@ -4,6 +4,7 @@ import db.DBConnector;
 import parser.DanawaParser;
 import parser.NaverShopParser;
 import task.CSVReader;
+import task.ProductTask;
 import ui.Menu;
 import utility.IOHandler;
 
@@ -40,7 +41,9 @@ public class Main {
 					cr.dumpCSV(userInput);
 					break;
 				case 4:
-					System.out.println("deprecated됨");
+					ProductTask pt = new ProductTask();
+					userInput = IOHandler.getInstance().getLineByUser("검색어를 입력하세요.");
+					pt.search(userInput);
 					break;
 				case 5:
 					System.out.println("deprecated됨");

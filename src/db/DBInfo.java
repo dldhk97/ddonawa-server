@@ -12,9 +12,14 @@ public enum DBInfo {
 	TABLE_FAVORITE_COULMN_PRODUCTNAME("상품정보_이름"),
 	TABLE_FAVORITE_COULMN_TARGETPRICE("목표금액"),
 	
+	TABLE_BIGCATEGORY("대품목정보"),
+	TABLE_BIGCATEGORY_COLUMN_ID("id"),
+	TABLE_BIGCATEGORY_COLUMN_NAME("이름"),
+	
 	TABLE_CATEGORY("품목정보"),
 	TABLE_CATEGORY_COLUMN_ID("id"),
 	TABLE_CATEGORY_COLUMN_NAME("이름"),
+	TABLE_CATEGORY_COLUMN_BIGCATEGORYID("대품목정보_id"),
 	
 	TABLE_PRODUCT("상품정보"),
 	TABLE_PRODUCT_COLUMN_NAME("이름"),
@@ -28,7 +33,7 @@ public enum DBInfo {
 	TABLE_COLLECTEDINFO_COLUMN_HITS("조회수"),
 	TABLE_COLLECTEDINFO_COLUMN_THUMBNAIL("썸네일");
 	
-	String val;
+	private String val;
 	
 	private DBInfo(String val) {
 		this.val = val;

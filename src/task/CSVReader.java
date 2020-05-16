@@ -13,10 +13,12 @@ import java.nio.charset.CodingErrorAction;
 import java.sql.Date;
 import java.util.ArrayList;
 
+import db.BigCategoryManager;
 import db.CategoryManager;
 import db.CollectedInfoManager;
 import db.DBConnector;
 import db.ProductManager;
+import model.BigCategory;
 import model.CSVProduct;
 import model.Category;
 import model.CollectedInfo;
@@ -121,6 +123,11 @@ public class CSVReader {
 		Product product = createProduct(csvProduct);
 		CollectedInfo collectedInfo = createCollectedinfo(csvProduct);
 		Category category = createCategory(csvProduct);
+		BigCategory bigCategory = createBigCategory(csvProduct);
+		
+		// 대품목정보 없으면 DB에 등록
+		BigCategoryManager bcm = new BigCategoryManager();
+		bcm.insertIfNotExist(bigCategory);
 		
 		// 품목정보 없으면 DB에 등록
 		CategoryManager cm = new CategoryManager();
@@ -161,8 +168,18 @@ public class CSVReader {
 	private Category createCategory(CSVProduct csvProduct) {
 		String categoryId = csvProduct.getCategoryId();
 		String categoryName = csvProduct.getCategoryName();
+		String bigCategoryId = String.valueOf(categoryId.charAt(0));		// 대품목정보는 품목정보Id의 첫글자임(알파벳)
 		
-		Category category = new Category(categoryId, categoryName);
+		Category category = new Category(categoryId, categoryName, bigCategoryId);
+		return category;
+	}
+	
+	private BigCategory createBigCategory(CSVProduct csvProduct) {
+		String categoryId = csvProduct.getCategoryId();
+		String bigCategoryId = String.valueOf(categoryId.charAt(0));		// 대품목정보는 품목정보Id의 첫글자임(알파벳)
+		String bigCategoryName = "카테고리 " + bigCategoryId;					// 이름은 임시로 카테고리 X 라고 붙여준다.
+		
+		BigCategory category = new BigCategory(bigCategoryId, bigCategoryName);
 		return category;
 	}
 	

@@ -13,11 +13,10 @@ public class ProductManager extends DBManager {
 	@Override
 	public Object findByKey(ArrayList<String> keyValues) throws Exception {
 		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
-		ArrayList<String> tableColumns = new ArrayList<>(
-				Arrays.asList(
-						DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString(), 
-						DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString()
-						));
+		ArrayList<String> tableColumns = new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString(), 
+				DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString()
+				));
 		
 		// 따옴표 처리
 		for(int i = 0 ; i < keyValues.size() ; i++) {
@@ -31,9 +30,9 @@ public class ProductManager extends DBManager {
 				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString() + "` = '" + keyValues.get(0) + "'";
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> result = DBConnector.getInstance().select(query, tableColumns);
+		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
 		
-		for(ArrayList<String> row : result) {
+		for(ArrayList<String> row : receieved) {
 			return new Product(row.get(0), row.get(1));
 		}
 		return null;
@@ -43,11 +42,12 @@ public class ProductManager extends DBManager {
 	@Override
 	protected int insert(Object obj) throws Exception {
 		Product product = (Product)obj;
-//		IOHandler.getInstance().log("[상품 추가 요청]" + product.getName() + ", " + product.getCategoryId());
 		
 		// 상품정보 테이블에 추가할 열 정보 배열 생성
-		ArrayList<String> columns = new ArrayList<>(
-				Arrays.asList(DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString(), DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString()));
+		ArrayList<String> columns = new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString(), 
+				DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString()
+				));
 		
 		// 상품정보 테이블에 추가할 데이터 정보 배열 생성
 		ArrayList<String> values = new ArrayList<>(
@@ -55,13 +55,6 @@ public class ProductManager extends DBManager {
 		
 		// 쿼리
 		int cnt = DBConnector.getInstance().insert(DBInfo.DB_NAME.toString(), DBInfo.TABLE_PRODUCT.toString(), columns, values);
-		
-//		if(cnt > 0) {
-//			IOHandler.getInstance().log("[SYSTEM]신규 상품정보 " + product.getName() + ", " + product.getCategoryId() + "추가됨.");
-//		}
-//		else {
-//			IOHandler.getInstance().log("[SYSTEM]신규 상품정보 " + product.getName() + ", " + product.getCategoryId() + "추가에 실패함.");
-//		}
 		
 		return cnt;
 	}
@@ -77,6 +70,32 @@ public class ProductManager extends DBManager {
 			cnt = insert(product);
 		}
 		return cnt > 0 ? true : false;
+	}
+	
+	public ArrayList<Product> searchByStr(String str) throws Exception {
+		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
+		ArrayList<String> tableColumns = new ArrayList<>(
+				Arrays.asList(
+						DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString(),
+						DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString()
+						));
+		
+		// 따옴표 처리
+		String searchStr = str.replace("'", "''");
+		
+		// 쿼리 생성
+		String query = "SELECT * FROM `" +
+				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_PRODUCT.toString() + "` WHERE `" +
+				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString() + "` LIKE '%" + searchStr + "%'";
+		
+		// 쿼리
+		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
+		ArrayList<Product> result = receieved.size() > 0 ? new ArrayList<Product>() : null;
+		
+		for(ArrayList<String> row : receieved) {
+			result.add(new Product(row.get(0), row.get(1)));
+		}
+		return result;
 	}
 	
 

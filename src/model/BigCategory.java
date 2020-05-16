@@ -2,19 +2,15 @@ package model;
 
 import java.io.Serializable;
 
-//DB와 동일한 품목정보 클래스
-public class Category implements Serializable{
-
+public class BigCategory implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private String id;
 	private String name;
-	private String bigCategoryId;
-
-	public Category(String id, String name, String bigCategoryId) {
+	
+	public BigCategory(String id, String name) {
 		this.id = id;
 		this.name = name;
-		this.bigCategoryId = bigCategoryId;
 	}
 	
 	public String getId() {
@@ -31,13 +27,5 @@ public class Category implements Serializable{
 	
 	public void setName(String name) {
 		this.name = name;
-	}
-	
-	public String getBigCategoryId() {
-		return bigCategoryId;
-	}
-
-	public void setBigCategoryId(String bigCategoryId) {
-		this.bigCategoryId = bigCategoryId;
 	}
 }

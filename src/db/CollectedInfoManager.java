@@ -223,7 +223,13 @@ public class CollectedInfoManager extends DBManager {
 				// 이전 수집정보가 존재하면 가격을 비교해서 낮으면 update한다.
 				if(previousInfo.getPrice() > collectedInfo.getPrice()) {
 //					IOHandler.getInstance().log("[수집정보] " + collectedDate + ", " + productName + ", " + previousInfo.getPrice() + "->" + collectedInfo.getPrice());
-					cnt = update(collectedInfo);							// 만약 CSV파일이 더 싸서 기존 정보를 대체할 때, 이전 썸네일 정보를 복사해서 쓰는가?? 일단 복사 안한다고 생각함.
+					
+					// 만약 신규 정보의 썸네일이 없으면 이전 썸네일을 복사한다.
+					String thumbnail = collectedInfo.getThumbnail();
+					if(thumbnail == null ||thumbnail.isEmpty()) {
+						collectedInfo.setThumbnail(previousInfo.getThumbnail());
+					}
+					cnt = update(collectedInfo);
 				}
 			}
 		}
