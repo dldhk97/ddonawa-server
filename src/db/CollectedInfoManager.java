@@ -200,10 +200,10 @@ public class CollectedInfoManager extends DBManager {
 	
 	// 수집정보가 없으면 insert, 있으면 비교 후 낮은 가격이면 update 
 	public boolean upsert(Object obj) throws Exception{
-		CollectedInfo collectedInfo = (CollectedInfo)obj;
+		CollectedInfo newInfo = (CollectedInfo)obj;
 		int cnt = 0;
-		String productName = collectedInfo.getProductName();
-		String collectedDate = collectedInfo.getCollectedDate().toString();
+		String productName = newInfo.getProductName();
+		String collectedDate = newInfo.getCollectedDate().toString();
 		
 		// 탐색할 키값은  상품정보_이름과 수집일자
 		ArrayList<String> keys = new ArrayList<>(Arrays.asList(
@@ -217,19 +217,28 @@ public class CollectedInfoManager extends DBManager {
 			
 			// 수집정보가 존재하지 않는 경우 해당 날짜에 없는 정보이므로 삽입
 			if(previousInfo == null) {
-				cnt = insert(collectedInfo);
+				cnt = insert(newInfo);
 			}
 			else {
+				String newThumbnail = newInfo.getThumbnail();
+				String prevThumbnail = previousInfo.getThumbnail();
+				
 				// 이전 수집정보가 존재하면 가격을 비교해서 낮으면 update한다.
-				if(previousInfo.getPrice() > collectedInfo.getPrice()) {
+				if(previousInfo.getPrice() > newInfo.getPrice()) {
 //					IOHandler.getInstance().log("[수집정보] " + collectedDate + ", " + productName + ", " + previousInfo.getPrice() + "->" + collectedInfo.getPrice());
 					
 					// 만약 신규 정보의 썸네일이 없으면 이전 썸네일을 복사한다.
-					String thumbnail = collectedInfo.getThumbnail();
-					if(thumbnail == null ||thumbnail.isEmpty()) {
-						collectedInfo.setThumbnail(previousInfo.getThumbnail());
+					if(newThumbnail == null ||newThumbnail.isEmpty()) {
+						newInfo.setThumbnail(prevThumbnail);
 					}
-					cnt = update(collectedInfo);
+					cnt = update(newInfo);
+				}
+				else {
+					// 이전 정보의 썸네일이 없으면 신규 썸네일을 복사해서 업데이트한다.
+					if(prevThumbnail == null ||prevThumbnail.isEmpty()) {
+						previousInfo.setThumbnail(newThumbnail);
+						cnt = update(previousInfo);
+					}
 				}
 			}
 		}

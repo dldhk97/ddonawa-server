@@ -98,5 +98,10 @@ public class ProductManager extends DBManager {
 		return result;
 	}
 	
+	// 다나와와 네이버쇼핑에서 파싱해서, 둘 중 더 싼 정보를 DB에 누적.
+	public boolean accumulate(Product product) {
+		
+		return false;
+	}
 
 }

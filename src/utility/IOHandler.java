@@ -28,8 +28,12 @@ public class IOHandler {
 //		e.printStackTrace();
 	}
 	
-	public int getIntByUser() {
+	public int getIntByUser(String msg) {
 		try {
+			if(msg != null) {
+				System.out.println(msg);
+			}
+			
 			Scanner scn = new Scanner(System.in);
 			System.out.print(">> ");
 			return scn.nextInt();			

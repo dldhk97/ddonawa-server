@@ -146,12 +146,7 @@ public class DBConnector {
 		return state.executeUpdate(sql);
 	}
 	
-	
-	
-	@Override
-	protected void finalize() throws Throwable {
-		super.finalize();
-		
+	public void close() {
 		try {
 			if(state != null) {
 				state.close();
@@ -170,5 +165,11 @@ public class DBConnector {
 			IOHandler.getInstance().log("[DBConnector.finalize]", e);
 		}
 		IOHandler.getInstance().log("MYSQL Closed");
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		close();
 	}
 }

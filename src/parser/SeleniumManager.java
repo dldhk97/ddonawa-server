@@ -11,6 +11,15 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class SeleniumManager {
+	// 싱글톤이다.
+	private static SeleniumManager _instance;
+	public static SeleniumManager getInstance()
+	{
+		if(_instance == null)
+			_instance = new SeleniumManager();
+		return _instance;
+	}
+	
 	// 크롬으로 크롤링할거면 true로 바꾸고 사용
 	private static final boolean CHROME_MODE = true;
 	private static final int TIMEOUT_CRWAL = 3;
@@ -59,6 +68,8 @@ public class SeleniumManager {
 	
 	// 이거 안하면 드라이버 프로세스는 살아있음
 	public void quit() {
-		driver.quit();
+		if(driver != null) {
+			driver.quit();
+		}
 	}
 }

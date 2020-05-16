@@ -2,6 +2,9 @@ package parser;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -9,24 +12,24 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.TimeoutException;
 
+import model.CollectedInfo;
 import utility.IOHandler;
 
 public abstract class Parser {
 	
-	public void parse(String searchStr) {
+	// 문자열로 다나와/네이버쇼핑에 검색 후 목록 나열함.
+	public ArrayList<CollectedInfo> parse(String searchStr) {
 		String orgHtml = null;
-		SeleniumManager sm = null;
 		
 		try {
 			// URL에 한글을 그대로 넣으면 깨질 수 있기 때문에 UTF-8 혹은 EUC-KR로 변환한다.
 			String encoded = toUTF8(searchStr);
 			
 			// 셀레니움으로 크롤링
-			sm = new SeleniumManager();
-			orgHtml = sm.explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
+			orgHtml = SeleniumManager.getInstance().explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
 			
 			// 필요한 정보 빼내기
-			parseProduct(orgHtml);
+			return parseProduct(orgHtml);
 		}
 		catch(TimeoutException te) {
 			// 검색 결과가 없거나 타임아웃
@@ -36,38 +39,39 @@ public abstract class Parser {
 			IOHandler.getInstance().log("Parser.parse", e);
 		}
 		
-		if(sm != null) {
-			sm.quit();			// 웹 드라이버 종료. 나중에 연속해서 파싱할거면 하면 안되고, 만들어 둔 셀레니움 매니저로 계속 crawl 하면됨.
-		}
+		return null;
 	}
 	
 	// HTML에서 필요한 정보 빼내기
-	protected void parseProduct(String html) {
+	protected ArrayList<CollectedInfo> parseProduct(String html) {
+		ArrayList<CollectedInfo> result = null;
 		try {
 			// 결과 html 문자열을 document 형태로 변환
 			Document doc = Jsoup.parse(html);
 			
 			// 클래스명으로 선택
 			Elements products = doc.getElementsByClass(getProductClassName());
+			if(products.size() > 0){
+				result = new ArrayList<CollectedInfo>();
+			}
 			
 			// 여러 항목 중 하나씩 탐색
-			for(Element product : products) {
+			for(Element p : products) {
 			
-				String href = getHref(product);								// 하이퍼링크 추출
-				String thumbnailUrl = getThumbnailUrl(product);				// 썸네일 URL 추출
-				String productName = getProductName(product);				// 상품명 추출
-				String price = getPrice(product);							// 가격 추출
+				String url = getHref(p);									// 하이퍼링크 추출
+				String thumbnail = getThumbnailUrl(p);						// 썸네일 URL 추출
+				String productName = getProductName(p);						// 상품명 추출
+				String priceStr = getPrice(p).replaceAll("[^0-9]", "");		// 문자열에서 숫자만 추출
+				double price = Double.parseDouble(priceStr);				// 가격 추출
+				Date date = new Date(Calendar.getInstance().getTime().getTime());		// 오늘 날짜
 				
-				// 등록월, 카테고리는 파싱 안해도 되나? 일단 패스함.
-				System.out.println("하이퍼링크 : " + href);
-				System.out.println("썸네일 URL : " + thumbnailUrl);
-				System.out.println("상품명 : " + productName);
-				System.out.println("가격 : " + price);
+				result.add(new CollectedInfo(productName, date, price, url, 0, thumbnail));
 			}
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("Parser.parseProduct", e);
-		}	
+		}
+		return result;
 	}
 	
 	// 한글을 UTF-8로 변환하는 메소드
