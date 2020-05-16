@@ -53,8 +53,8 @@ public class CollectedInfoManager extends DBManager {
 		return null;
 	}
 	
-	// 상품명으로 탐색하여 가장 최신의 수집정보 반환
-	public Object findByProductName(String productName) throws Exception {
+	// 상품명으로 탐색하여 수집정보 배열 반환. 날짜는 위에서부터 최신순으로 들어있음.
+	public ArrayList<CollectedInfo> findByProductName(String productName) throws Exception {
 		// 수집정보 테이블에서 조회할 열 목록(상품정보_이름, 수집일자, 가격, URL, 조회수, 썸네일)
 		ArrayList<String> tableColumns = new ArrayList<>(
 				Arrays.asList(
@@ -76,9 +76,10 @@ public class CollectedInfoManager extends DBManager {
 				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString() + "` DESC";
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> result = DBConnector.getInstance().select(query, tableColumns);
+		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
 		
-		for(ArrayList<String> row : result) {
+		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
+		for(ArrayList<String> row : receieved) {
 			productName = row.get(0);
 			Date collectedDate = Date.valueOf(row.get(1));
 			double price = Double.valueOf(row.get(2));
@@ -86,9 +87,9 @@ public class CollectedInfoManager extends DBManager {
 			long hits = row.get(4) != null ? Long.parseLong(row.get(4)) : 0;
 			String thumbnail = row.get(5);
 			
-			return new CollectedInfo(productName, collectedDate, price, url, hits, thumbnail);
+			result.add(new CollectedInfo(productName, collectedDate, price, url, hits, thumbnail));
 		}
-		return null;
+		return result.size() > 0 ? result : null;
 	}
 
 	@Override

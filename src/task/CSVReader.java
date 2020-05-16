@@ -28,7 +28,7 @@ import utility.IOHandler;
 public class CSVReader {
 	
 	// 주어진 경로 내에 존재하는 CSV파일을 읽고 DB에 올린다. 하위 폴더까지는 찾지 않음.
-	public void dumpCSV(String path) {
+	public boolean dumpCSV(String path) {
 		File dir = new File(path);
 		
 		try {
@@ -58,7 +58,7 @@ public class CSVReader {
 				// DB 연결 확인
 				if(!DBConnector.getInstance().isConnected()) {
 		    		IOHandler.getInstance().log("[CSVReader.dumpCSV]DB에 연결할 수 없음");
-					return;
+					return false;
 				}
 				
 				// DB에 업데이트
@@ -75,10 +75,12 @@ public class CSVReader {
 				}
 				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 완료(총 " + productList.size() + "개)");
 			}
+			return true;
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("CSVReader.dumpCSV-Unknown",e);
 		}
+		return false;
 	}
 	
 	// 하나의 CSV 파일을 읽고 CSVProduct 배열 반환하는 메소드

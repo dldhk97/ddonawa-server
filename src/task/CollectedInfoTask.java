@@ -114,11 +114,12 @@ public class CollectedInfoTask {
 	// 1차 필터 : 상품명에 코드가 있다면, 해당 코드가 있는 수집정보만 남긴다.
 	private ArrayList<CollectedInfo> codeFilter(Product product, ArrayList<CollectedInfo> infoList){
 		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
-		String target = findCode(product.getName());
+		String code = findCode(product.getName());
+		IOHandler.getInstance().log("[DEBUG] 코드 : " + code);
 		
-		if(target != null) {
+		if(code != null) {
 			for(CollectedInfo c : infoList) {
-				if(c.getProductName().contains(target)) {
+				if(c.getProductName().contains(code)) {
 					result.add(c);
 				}
 			}
