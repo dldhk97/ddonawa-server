@@ -9,9 +9,9 @@ public class Favorite implements Serializable{
 	
 	private String accountId;
 	private String productName;
-	private int targetPrice;
+	private double targetPrice;
 	
-	public Favorite(String accountId, String productName, int targetPrice) {
+	public Favorite(String accountId, String productName, double targetPrice) {
 		this.accountId = accountId;
 		this.productName = productName;
 		this.targetPrice = targetPrice;
@@ -33,11 +33,11 @@ public class Favorite implements Serializable{
 		this.productName = productName;
 	}
 	
-	public int getTargetPrice() {
+	public double getTargetPrice() {
 		return targetPrice;
 	}
 	
-	public void setTargetPrice(int targetPrice) {
+	public void setTargetPrice(double targetPrice) {
 		this.targetPrice = targetPrice;
 	}
 

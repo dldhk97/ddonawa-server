@@ -12,47 +12,6 @@ import utility.IOHandler;
 
 public class CollectedInfoManager extends DBManager {
 
-	// 수집정보 테이블에서 상품정보_이름, 수집일자로 탐색, 완전히 일치하면 수집정보 반환, 없으면 NULL
-	@Override
-	public Object findByKey(ArrayList<String> keyValues) throws Exception {
-		// 수집정보 테이블에서 조회할 열 목록(상품정보_이름, 수집일자, 가격, URL, 조회수, 썸네일)
-		ArrayList<String> tableColumns = new ArrayList<>(Arrays.asList(
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_URL.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_THUMBNAIL.toString()
-						));
-		
-		// 따옴표 처리
-		for(int i = 0 ; i < keyValues.size() ; i++) {
-			String keyValue = keyValues.get(i);
-			keyValues.set(i, keyValue.replace("'", "''"));
-		}
-		
-		// 쿼리 생성
-		String query = "SELECT * FROM `" +
-				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_COLLECTEDINFO.toString() + "` WHERE `" +
-				DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString() + "` = '" + keyValues.get(0) + "' AND `" +
-				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString() + "` = '" + keyValues.get(1) + "'";
-		
-		// 쿼리
-		ArrayList<ArrayList<String>> result = DBConnector.getInstance().select(query, tableColumns);
-		
-		for(ArrayList<String> row : result) {
-			String productName = row.get(0);
-			Date collectedDate = Date.valueOf(row.get(1));
-			double price = Double.valueOf(row.get(2));
-			String url = row.get(3);
-			long hits = row.get(4) != null ? Long.parseLong(row.get(4)) : 0;
-			String thumbnail = row.get(5);
-			
-			return new CollectedInfo(productName, collectedDate, price, url, hits, thumbnail);
-		}
-		return null;
-	}
-	
 	// 상품명으로 탐색하여 수집정보 배열 반환. 날짜는 위에서부터 최신순으로 들어있음.
 	public ArrayList<CollectedInfo> findByProductName(String productName) throws Exception {
 		// 수집정보 테이블에서 조회할 열 목록(상품정보_이름, 수집일자, 가격, URL, 조회수, 썸네일)
@@ -250,5 +209,53 @@ public class CollectedInfoManager extends DBManager {
 		
 		return cnt > 0 ? true : false;
 	}
-
+	
+	@Override
+	protected ArrayList<String> getTableColumnsAll() {
+		return new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString(),
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_URL.toString(),
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString(),
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_THUMBNAIL.toString()
+				));
+	}
+	@Override
+	protected String getSelectQueryByKeys(ArrayList<String> keyValues) {
+		return "SELECT * FROM `" +
+				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_COLLECTEDINFO.toString() + "` WHERE `" +
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString() + "` = '" + keyValues.get(0) + "' AND `" +
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString() + "` = '" + keyValues.get(1) + "'";
+	}
+	@Override
+	protected Object getModel(ArrayList<ArrayList<String>> received) {
+		for(ArrayList<String> row : received) {
+			String productName = row.get(0);
+			Date collectedDate = Date.valueOf(row.get(1));
+			double price = Double.valueOf(row.get(2));
+			String url = row.get(3);
+			long hits = row.get(4) != null ? Long.parseLong(row.get(4)) : 0;
+			String thumbnail = row.get(5);
+			
+			return new CollectedInfo(productName, collectedDate, price, url, hits, thumbnail);
+		}
+		return null;
+	}
+	@Override
+	protected ArrayList<String> modelToStringArray(Object object){
+		CollectedInfo collectedInfo = (CollectedInfo)object;
+		return new ArrayList<>(Arrays.asList(
+				collectedInfo.getProductName(), 
+				collectedInfo.getCollectedDate().toString(),
+				String.valueOf(collectedInfo.getPrice()),
+				collectedInfo.getUrl(),
+				String.valueOf(collectedInfo.getHits()),
+				collectedInfo.getThumbnail()
+				));
+	}
+	@Override
+	protected String getTableName() {
+		return DBInfo.TABLE_COLLECTEDINFO.toString();
+	}
 }
