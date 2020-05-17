@@ -1,6 +1,7 @@
 package task;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import db.CollectedInfoManager;
 import model.CollectedInfo;
@@ -86,23 +87,23 @@ public class CollectedInfoTask {
 			}
 			
 			// 필터 1 : 상품명에 코드가 있다면, 해당되는 수집정보만 남긴다.
-			ArrayList<CollectedInfo> result = codeFilter(product, infoList);
+			codeFilter(product, infoList);
 			
 			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
 			debugCnt = 0;
-			for(CollectedInfo c : result) {
+			for(CollectedInfo c : infoList) {
 				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
 			}
 			
-			// 필터 2 : 유사도를 비교한다. 현재 유사도는 n 이하이면 통과 목적으로만 사용됨.
-			result = simliarFilter(product, result);
+			// 필터 2 : 유사도를 비교한다. 유사도가 n 이하인 경우에만 남긴다.
+			simliarFilter(product, infoList);
 			
 			IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
 			debugCnt = 0;
-			for(CollectedInfo c : result) {
+			for(CollectedInfo c : infoList) {
 				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
 			}
-			return result;
+			return infoList.size() > 0 ? infoList : null;
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("CollectedInfoTask.filtering", e);
@@ -111,41 +112,54 @@ public class CollectedInfoTask {
 		return null;
 	}
 	
-	// 1차 필터 : 상품명에 코드가 있다면, 해당 코드가 있는 수집정보만 남긴다.
-	private ArrayList<CollectedInfo> codeFilter(Product product, ArrayList<CollectedInfo> infoList){
+	// 상품명에 코드가 있다면, 수집정보 배열에서 해당 코드가 포함된 수집정보만 남긴다.
+	private void codeFilter(Product product, ArrayList<CollectedInfo> infoList){
 		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
 		String code = findCode(product.getName());
 		IOHandler.getInstance().log("[DEBUG] 코드 : " + code);
 		
 		if(code != null) {
-			for(CollectedInfo c : infoList) {
-				if(c.getProductName().contains(code)) {
-					result.add(c);
+			for(Iterator<CollectedInfo> it = infoList.iterator() ; it.hasNext();) {
+				CollectedInfo c = it.next();
+				if(!c.getProductName().contains(code)) {
+					result.remove(c);
+					System.out.println(c.getProductName() + " 코드미포함으로 삭제됨.");
 				}
 			}
-			return result.size() > 0 ? result : null;
-		}
-		else {
-			return infoList;
 		}
 	}
 	
-	// 2차 필터 : 유사도를 비교한다. 현재 유사도는 n 이하이면 통과 목적으로만 사용됨.
-	private ArrayList<CollectedInfo> simliarFilter(Product product, ArrayList<CollectedInfo> infoList){
+	// 상품명과 수집정보명 두개의 유사도를 비교한다.
+	private void simliarFilter(Product product, ArrayList<CollectedInfo> infoList){
 		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
 		
-		for(CollectedInfo c : infoList) {
-			// 유사도 비교
+		for(Iterator<CollectedInfo> it = infoList.iterator() ; it.hasNext();) {
+			CollectedInfo c = it.next();
 			int similarPoint = levenshteinDistance(product.getName(), c.getProductName());
-			if(similarPoint <= MAX_SIMILAR_POINT) {
-				result.add(c);
+			if(similarPoint > MAX_SIMILAR_POINT) {
+				result.remove(c);
 			}
 		}
-		return result.size() > 0 ? result : null;
+	}
+	
+	// 가장 저렴한 상품 선택하여 반환
+	private CollectedInfo getMostInexpensive(ArrayList<CollectedInfo> infoList) {
+		if(infoList == null || infoList.size() <= 0) {
+			return null;
+		}
+		
+		CollectedInfo result = infoList.get(0);
+		
+		for(CollectedInfo c : infoList) {
+			if(result.getPrice() > c.getPrice()) {
+				result = c;
+			}
+		}
+		return result;
 	}
 	
 	// ---------------------------------------------------------------- //
-	
+	// 문자열 관련 메소드
 	
 	// 코드란 A-Za-z0-9로 시작하거나 끝나는 연속된 문자열(n자리 이상)을 말한다.(n=MIN_CODE_RECOGNIZE_LENGTH)
 	private String findCode(String str) {
@@ -175,23 +189,7 @@ public class CollectedInfoTask {
 	}
 	
 	
-	// 가장 저렴한 상품 선택하여 반환
-	private CollectedInfo getMostInexpensive(ArrayList<CollectedInfo> infoList) {
-		if(infoList == null || infoList.size() <= 0) {
-			return null;
-		}
-		
-		CollectedInfo result = infoList.get(0);
-		
-		for(CollectedInfo c : infoList) {
-			if(result.getPrice() > c.getPrice()) {
-				result = c;
-			}
-		}
-		return result;
-	}
-	
-	// 두 String의 유사도 측정 - Levenshtein distance
+	// Levenshtein distance으로 유사도를 비교한다. 유사도는 0에 가까울수록 productName과 유사하다는 의미임.
 	private int levenshteinDistance(String productName, String parsedName) {
 		try {
 			String longStr, shortStr;
