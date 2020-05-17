@@ -86,7 +86,7 @@ public class AccountTask {
 	
 	private boolean isInvalidAccountInfo(Account account) {
 		String id = account.getId();
-		if(id.matches("admin")) {
+		if(id.equals("admin") || id.equals("administrator") || id.equals("root") || id.equals("server") || id.equals("client")) {
 			return true;	// 어드민 사용 불가
 		}
 		else if(id.length() < 4) {

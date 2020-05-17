@@ -135,6 +135,10 @@ public class ConsoleTask {
 		// 계정 탐색
 		IOHandler.getInstance().log("[SYSTEM]찜을 추가할 계정을 입력 및 선택해주세요.");
 		ArrayList<Account> accountList = searchAccounts();
+		if(accountList == null) {
+			IOHandler.getInstance().log("[SYSTEM]사용자 조회 결과가 없습니다.");
+			return;
+		}
 		
 		// 사용자에게 어떤 계정을 선택할건지 묻는다.
 		Account account = (Account) selectObject(accountList);
@@ -142,6 +146,10 @@ public class ConsoleTask {
 		// 상품정보 탐색
 		IOHandler.getInstance().log("[SYSTEM]상품을 입력 및 선택해주세요.");
 		ArrayList<Product> productList = searchProducts();
+		if(productList == null) {
+			IOHandler.getInstance().log("[SYSTEM]상품 조회 결과가 없습니다.");
+			return;
+		}
 		
 		// 사용자에게 어떤 상품을 추가할건지 묻는다.
 		Product product = (Product) selectObject(productList);
@@ -158,6 +166,10 @@ public class ConsoleTask {
 	public void manualCheckFavorites() {
 		// 계정 탐색
 		ArrayList<Account> accountList = searchAccounts();
+		if(accountList == null) {
+			IOHandler.getInstance().log("[SYSTEM]사용자 조회 결과가 없습니다.");
+			return;
+		}
 		
 		// 사용자에게 어떤 계정을 선택할건지 묻는다.
 		Account selected = (Account) selectObject(accountList);
