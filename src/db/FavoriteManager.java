@@ -9,27 +9,6 @@ import model.Favorite;
 public class FavoriteManager extends DBManager {
 
 	@Override
-	public int insert(Object obj) throws Exception {
-//		Product product = (Product)obj;
-//		
-//		// 상품정보 테이블에 추가할 열 정보 배열 생성
-//		ArrayList<String> columns = new ArrayList<>(Arrays.asList(
-//				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString(), 
-//				DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString()
-//				));
-//		
-//		// 상품정보 테이블에 추가할 데이터 정보 배열 생성
-//		ArrayList<String> values = new ArrayList<>(
-//				Arrays.asList(product.getName(), product.getCategoryId()));
-//		
-//		// 쿼리
-//		int cnt = DBConnector.getInstance().insert(DBInfo.DB_NAME.toString(), DBInfo.TABLE_PRODUCT.toString(), columns, values);
-//		
-//		return cnt;
-		return 0;
-	}
-	
-	@Override
 	protected ArrayList<String> getTableColumnsAll() {
 		return new ArrayList<>(Arrays.asList(
 				DBInfo.TABLE_FAVORITE_COLUMN_ACCOUNTID.toString(), 

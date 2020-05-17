@@ -65,7 +65,7 @@ public class CSVReader {
 				int cnt = 0;
 				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 시작(총 " + productList.size() + "개)");
 				for(CSVProduct p : productList) {
-					update(p);
+					update(p);						
 					
 					// 1000항목당 한번씩 알림
 					if(cnt % 1000 == 0) {
@@ -129,27 +129,19 @@ public class CSVReader {
 		
 		// 대품목정보 없으면 DB에 등록
 		BigCategoryManager bcm = new BigCategoryManager();
-		if(!bcm.insertIfNotExist(bigCategory)) {
-			return;
-		}
+		bcm.insertIfNotExist(bigCategory);
 		
 		// 품목정보 없으면 DB에 등록
 		CategoryManager cm = new CategoryManager();
-		if(!cm.insertIfNotExist(category)) {
-			return;
-		}
+		cm.insertIfNotExist(category);
 		
 		// 상품정보 없으면 상품정보를 DB에 등록
 		ProductManager pm = new ProductManager();
-		if(!pm.insertIfNotExist(product)) {
-			return;
-		}
+		pm.insertIfNotExist(product);
 		
 		// 수집정보가 없으면 insert, 있으면 비교 후 낮은 가격이면 update 
 		CollectedInfoManager cim = new CollectedInfoManager();
-		if(!cim.upsert(collectedInfo)) {
-			return;
-		}
+		cim.upsert(collectedInfo);
 	}
 	
 	// CSV에서 추출한 CSVProduct 객체를 Product(상품정보) 객체로 변환

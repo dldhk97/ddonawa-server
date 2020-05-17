@@ -24,7 +24,7 @@ public class IOHandler {
 	
 	// 예외 발생 시 사용할 수 있는 로그 메소드
 	public void log(String from, Exception e) {
-		System.out.println("[" + new Date() + "][" + from + "]\n" + e.getMessage());
+		System.out.println("[" + new Date() + "][" + from + "]\n" + e.getCause());
 //		e.printStackTrace();
 	}
 	

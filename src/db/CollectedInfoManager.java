@@ -50,61 +50,6 @@ public class CollectedInfoManager extends DBManager {
 		}
 		return result.size() > 0 ? result : null;
 	}
-
-	@Override
-	public int insert(Object obj) throws Exception {
-		CollectedInfo collectedInfo = (CollectedInfo)obj;
-//		IOHandler.getInstance().log("[수집정보 추가 요청]" + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString());
-		
-		String productName = collectedInfo.getProductName();
-		String collectedDate = collectedInfo.getCollectedDate().toString();
-		double price = collectedInfo.getPrice();
-		String url = collectedInfo.getUrl();
-		long hits = collectedInfo.getHits();
-		String thumbnail = collectedInfo.getThumbnail();
-		
-		// 수집정보 테이블에 추가할 열(NOTNULL) 정보 배열 생성
-		ArrayList<String> columns = new ArrayList<>(Arrays.asList(
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),				//가격는 NOTNULL이라 기본생성에 포함시킴
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString()				//조회수는 비어있어도 0으로 넣음.
-						));
-		
-		// 품목정보 테이블에 추가할 데이터 정보 배열 생성
-		ArrayList<String> values = new ArrayList<>(Arrays.asList(
-						productName, 
-						collectedDate.toString(),
-						String.valueOf(price),
-						String.valueOf(hits)
-						));
-		
-		// NULL이 될 수 있는 속성들은 선택적 추가
-		if(url != null) {
-			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_URL.toString());
-			values.add(url);
-		}
-		if(hits != 0) {
-			
-			
-		}
-		if(thumbnail != null) {
-			columns.add(DBInfo.TABLE_COLLECTEDINFO_COLUMN_THUMBNAIL.toString());
-			values.add(thumbnail);
-		}
-		
-		// 쿼리
-		int cnt = DBConnector.getInstance().insert(DBInfo.DB_NAME.toString(), DBInfo.TABLE_COLLECTEDINFO.toString(), columns, values);
-		
-//		if(cnt > 0) {
-//			IOHandler.getInstance().log("[SYSTEM]신규 수집정보 " + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString() + " 추가됨.");
-//		}
-//		else {
-//			IOHandler.getInstance().log("[SYSTEM]신규 수집정보 " + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString() + " 추가에 실패함.");
-//		}
-		
-		return cnt;
-	}
 	
 	protected int update(Object obj) throws Exception{
 		CollectedInfo collectedInfo = (CollectedInfo)obj;
@@ -149,13 +94,6 @@ public class CollectedInfoManager extends DBManager {
 		
 		// 쿼리
 		int cnt = DBConnector.getInstance().update(DBInfo.DB_NAME.toString(), DBInfo.TABLE_COLLECTEDINFO.toString(),keyColumns, keyValues, columns, values);
-		
-//		if(cnt > 0) {
-//			IOHandler.getInstance().log("[SYSTEM]신규 수집정보 " + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString() + " 갱신됨.");
-//		}
-//		else {
-//			IOHandler.getInstance().log("[SYSTEM]신규 수집정보 " + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString() + " 갱신에 실패함.");
-//		}
 		
 		return cnt;
 	}
@@ -204,6 +142,7 @@ public class CollectedInfoManager extends DBManager {
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("[CollectedInfoManager.upsert]", e);
+			IOHandler.getInstance().log("[DEBUG]CollectedInfo : " + productName);
 			throw e;
 		}
 		

@@ -62,10 +62,10 @@ public class ConsoleTask {
 		String userInput = IOHandler.getInstance().getLineByUser("경로를 입력하세요.");
 		boolean isSucceed = cr.dumpCSV(userInput);
 		if(isSucceed) {
-			IOHandler.getInstance().log("[SYSTEM]경로 " + userInput + "내 모든 CSV가 DB에 갱신되었습니다.");
+			IOHandler.getInstance().log("[SYSTEM]경로 " + userInput + " 내의 모든 CSV가 DB에 갱신되었습니다.");
 		}
 		else {
-			IOHandler.getInstance().log("[SYSTEM]경로 " + userInput + "내 CSV를 갱신하는 도중 오류가 발생하였습니다.");
+			IOHandler.getInstance().log("[SYSTEM]경로 " + userInput + " 내의 CSV를 갱신하는 도중 오류가 발생하였습니다.");
 		}
 	}
 	

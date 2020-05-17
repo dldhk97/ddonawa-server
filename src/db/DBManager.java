@@ -35,12 +35,12 @@ public abstract class DBManager {
 		// 쿼리
 		int cnt = DBConnector.getInstance().insert(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
 		
-		if(cnt > 0) {
-			IOHandler.getInstance().log("DB에 추가 성공");
-		}
-		else {
-			IOHandler.getInstance().log("DB에 추가 실패");
-		}
+//		if(cnt > 0) {
+//			IOHandler.getInstance().log(getTableName() + " DB에 추가 성공");
+//		}
+//		else {
+//			IOHandler.getInstance().log(getTableName() + " DB에 추가 실패");
+//		}
 		
 		return cnt;
 	}

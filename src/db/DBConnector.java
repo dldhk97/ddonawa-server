@@ -74,7 +74,8 @@ public class DBConnector {
 		// 따옴표 처리 ex)[리바이스] LEVI'S 511 슬림핏 청바지_블루(04511-3231)
 		for(int i = 0 ; i < values.size() ; i++) {
 			String value = values.get(i);
-			values.set(i, value.replace("'", "''"));
+			if(value != null)
+				values.set(i, value.replace("'", "''"));
 		}
 		
 		// SQL문 작성
@@ -88,7 +89,8 @@ public class DBConnector {
 		sb.append(") VALUES (");
 		
 		for(String value : values) {
-			sb.append("'" + value + "', ");
+			String v = value != null ? "'" + value + "', " : "null, ";
+			sb.append(v);
 		}
 		if(values.size() > 0) {
 			sb.delete(sb.length() - 2, sb.length());
