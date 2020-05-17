@@ -1,6 +1,11 @@
 package db;
 
 public enum DBInfo {
+	JDBC_DRIVER("com.mysql.cj.jdbc.Driver"),
+	DB_URL("jdbc:mysql://localhost/ddonawa?characterEncoding=UTF-8&serverTimezone=UTC"),
+	USER_NAME("ddonawa"),
+	PASSWORD("!1q2w3e4r"),
+	
 	DB_NAME("ddonawa"),
 	
 	TABLE_ACCOUNT("계정"),

@@ -1,6 +1,5 @@
 package db;
 
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -48,6 +47,14 @@ public class FavoriteManager extends DBManager {
 	@Override
 	protected String getTableName() {
 		return DBInfo.TABLE_FAVORITE.toString();
+	}
+	@Override
+	protected ArrayList<String> getKeyValuesFromObject(Object object) {
+		Favorite favorite = (Favorite) object;
+		return new ArrayList<>(Arrays.asList(
+				favorite.getAccountId(), 
+				favorite.getProductName()
+				));
 	}
 
 }

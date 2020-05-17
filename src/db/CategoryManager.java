@@ -4,23 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import model.Category;
-import utility.IOHandler;
 
 public class CategoryManager extends DBManager{
-
-	// DB에 해당 품목정보가 없으면 신규 등록
-	public boolean insertIfNotExist(Object obj) throws Exception {
-		Category category = (Category)obj;
-		int cnt = 0;
-		
-		ArrayList<String> keys = new ArrayList<String>(Arrays.asList(
-				category.getId()
-				));
-		if(findByKey(keys) == null) {
-			cnt = insert(category);
-		}
-		return cnt > 0 ? true : false;
-	}
 	
 	@Override
 	protected ArrayList<String> getTableColumnsAll() {
@@ -55,5 +40,13 @@ public class CategoryManager extends DBManager{
 	@Override
 	protected String getTableName() {
 		return DBInfo.TABLE_CATEGORY.toString();
+	}
+
+	@Override
+	protected ArrayList<String> getKeyValuesFromObject(Object object) {
+		Category category = (Category) object;
+		return new ArrayList<>(Arrays.asList(
+				category.getId() 
+				));
 	}
 }

@@ -4,10 +4,7 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import model.BigCategory;
-import model.Category;
 import model.CollectedInfo;
-import model.Product;
 import utility.IOHandler;
 
 public class CollectedInfoManager extends DBManager {
@@ -196,5 +193,14 @@ public class CollectedInfoManager extends DBManager {
 	@Override
 	protected String getTableName() {
 		return DBInfo.TABLE_COLLECTEDINFO.toString();
+	}
+
+	@Override
+	protected ArrayList<String> getKeyValuesFromObject(Object object) {
+		CollectedInfo collectedInfo = (CollectedInfo)object;
+		return new ArrayList<>(Arrays.asList(
+				collectedInfo.getProductName(), 
+				collectedInfo.getCollectedDate().toString()
+				));
 	}
 }

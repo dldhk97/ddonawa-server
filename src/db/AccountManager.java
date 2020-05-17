@@ -39,5 +39,12 @@ public class AccountManager extends DBManager{
 	protected String getTableName() {
 		return DBInfo.TABLE_ACCOUNT.toString();
 	}
+	@Override
+	protected ArrayList<String> getKeyValuesFromObject(Object object){
+		Account account = (Account)object;
+		return new ArrayList<>(Arrays.asList(
+				account.getId()
+				));
+	}
 
 }

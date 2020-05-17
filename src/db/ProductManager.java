@@ -3,22 +3,9 @@ package db;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import model.Category;
 import model.Product;
-import utility.IOHandler;
 
 public class ProductManager extends DBManager {
-	// DB에 해당 상품정보가 없으면 신규 등록
-	public boolean insertIfNotExist(Object obj) throws Exception {
-		Product product = (Product)obj;
-		int cnt = 0;
-		
-		ArrayList<String> keys = new ArrayList<String>(Arrays.asList(product.getName()));
-		if(findByKey(keys) == null) {
-			cnt = insert(product);
-		}
-		return cnt > 0 ? true : false;
-	}
 	
 	public ArrayList<Product> searchByStr(String str) throws Exception {
 		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
@@ -44,12 +31,6 @@ public class ProductManager extends DBManager {
 			result.add(new Product(row.get(0), row.get(1)));
 		}
 		return result;
-	}
-	
-	// 다나와와 네이버쇼핑에서 파싱해서, 둘 중 더 싼 정보를 DB에 누적.
-	public boolean accumulate(Product product) {
-		
-		return false;
 	}
 	
 	@Override
@@ -83,6 +64,14 @@ public class ProductManager extends DBManager {
 	@Override
 	protected String getTableName() {
 		return DBInfo.TABLE_PRODUCT.toString();
+	}
+
+	@Override
+	protected ArrayList<String> getKeyValuesFromObject(Object object) {
+		Product product = (Product) object;
+		return new ArrayList<>(Arrays.asList(
+				product.getName()
+				));
 	}
 
 }

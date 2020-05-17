@@ -4,22 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import model.BigCategory;
-import utility.IOHandler;
 
 public class BigCategoryManager extends DBManager{
-
-	// DB에 해당 품목정보가 없으면 신규 등록
-	public int insertIfNotExist(Object obj) throws Exception {
-		BigCategory bigCategory = (BigCategory)obj;
-		
-		ArrayList<String> keys = new ArrayList<String>(Arrays.asList(
-				bigCategory.getId()
-				));
-		if(findByKey(keys) == null) {
-			return insert(bigCategory);
-		}
-		return 0;
-	}
 	
 	@Override
 	protected ArrayList<String> getTableColumnsAll(){
@@ -52,5 +38,12 @@ public class BigCategoryManager extends DBManager{
 	@Override
 	protected String getTableName() {
 		return DBInfo.TABLE_BIGCATEGORY.toString();
+	}
+	@Override
+	protected ArrayList<String> getKeyValuesFromObject(Object object) {
+		BigCategory bigCategory = (BigCategory) object;
+		return new ArrayList<>(Arrays.asList(
+				bigCategory.getId()
+				));
 	}
 }

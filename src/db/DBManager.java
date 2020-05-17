@@ -1,10 +1,6 @@
 package db;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import model.Account;
-import utility.IOHandler;
 
 public abstract class DBManager {
 	// 테이블에서 키값으로 탐색, 존재하면 해당되는 객체 반환, 없으면 NULL 반환
@@ -12,6 +8,7 @@ public abstract class DBManager {
 		// 각 테이블에서 가져올 열 목록 설정
 		ArrayList<String> tableColumns = getTableColumnsAll();
 		
+		// 콤마 DB에 들어가기 전에 오류나지 않게 수정함.
 		replaceToSQLComma(keyValues);
 		
 		// 쿼리 생성
@@ -45,12 +42,22 @@ public abstract class DBManager {
 		return cnt;
 	}
 	
+	// DB에 이미 있으면 안넣고, 없으면 넣음
+	public int insertIfNotExist(Object object) throws Exception {
+		ArrayList<String> keyValues = getKeyValuesFromObject(object);
+		if(findByKey(keyValues) == null) {
+			return insert(object);
+		}
+		return 0;
+	}
+	
 	
 	protected abstract ArrayList<String> getTableColumnsAll();								// 해당 테이블의 모든 열 이름을 가져온다.
 	protected abstract String getSelectQueryByKeys(ArrayList<String> keyValues);			// 테이블 조회를 위한 쿼리 문자열 만들어 가져온다.
 	protected abstract Object getModel(ArrayList<ArrayList<String>> received);				// 테이블 조회 결과에서 필요한 객체를 만들어 가져온다.
 	protected abstract ArrayList<String> modelToStringArray(Object object); 				// 객체를 알맞게 String 배열로 변환하여 가져온다.
-	protected abstract String getTableName();
+	protected abstract String getTableName();												// 클래스 알맞은 테이블명 반환.
+	protected abstract ArrayList<String> getKeyValuesFromObject(Object object);				// 클래스에서 키값만 반환
 	
 	// 콤마 SQL콤마로 수정
 	protected void replaceToSQLComma(ArrayList<String> keyValues){
