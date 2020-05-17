@@ -114,7 +114,6 @@ public class CollectedInfoTask {
 	
 	// 상품명에 코드가 있다면, 수집정보 배열에서 해당 코드가 포함된 수집정보만 남긴다.
 	private void codeFilter(Product product, ArrayList<CollectedInfo> infoList){
-		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
 		String code = findCode(product.getName());
 		IOHandler.getInstance().log("[DEBUG] 코드 : " + code);
 		
@@ -122,8 +121,8 @@ public class CollectedInfoTask {
 			for(Iterator<CollectedInfo> it = infoList.iterator() ; it.hasNext();) {
 				CollectedInfo c = it.next();
 				if(!c.getProductName().contains(code)) {
-					result.remove(c);
-					System.out.println(c.getProductName() + " 코드미포함으로 삭제됨.");
+					it.remove();
+					IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + " 코드미포함으로 제외됨.");
 				}
 			}
 		}

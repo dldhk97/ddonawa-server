@@ -21,8 +21,8 @@ public class ConsoleTask {
 			return;
 		}
 		
-		// 원하는 상품정보 선택
-		Product targetProduct = selectProduct(productList);
+		// 결과가 하나라면 자동으로 첫번째 객체로 진행, 결과가 여러개면 사용자에게 선택시킴. 
+		Product targetProduct = productList.size() == 1 ? productList.get(0) : selectProduct(productList);
 		
 		// 웹 파싱하여 DB에 추가/업데이트
 		CollectedInfoTask cit = new CollectedInfoTask();
@@ -76,8 +76,8 @@ public class ConsoleTask {
 			return;
 		}
 		
-		// 원하는 상품정보 선택
-		Product targetProduct = selectProduct(productList);
+		// 결과가 하나라면 자동으로 첫번째 객체로 진행, 결과가 여러개면 사용자에게 선택시킴.
+		Product targetProduct = productList.size() == 1 ? productList.get(0) : selectProduct(productList);
 		
 		// DB에서 해당되는 수집정보 조회
 		CollectedInfoManager cim = new CollectedInfoManager();
