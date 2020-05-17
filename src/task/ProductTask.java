@@ -11,7 +11,7 @@ public class ProductTask {
 	// 사용자가 검색했을 때 동작하는 메소드. 검색하서 결과 상품 목록을 클라이언트에 반환함.
 	public ArrayList<Product> search(String searchWord) {
 		try {
-			// 문자열 정규화 등 선처리
+			// 문자열 정규화 등 선처리. 현재는 별도의 처리 없이 그대로 DB에 SELECT함.
 			
 			// SQL에 검색
 			ProductManager pm = new ProductManager();

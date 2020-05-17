@@ -2,14 +2,14 @@ package application;
 
 import java.util.ArrayList;
 
+import console.ConsoleTask;
+import console.Menu;
 import db.DBConnector;
 import model.Product;
 import parser.SeleniumManager;
 import task.CSVReader;
 import task.CollectedInfoTask;
 import task.ProductTask;
-import ui.ConsoleTask;
-import ui.Menu;
 import utility.IOHandler;
 
 public class Main{
@@ -32,7 +32,6 @@ public class Main{
 			
 			Menu menu = new Menu();
 			menu.welcome();
-			String userInput = null;
 			ConsoleTask ct = new ConsoleTask();
 			
 			while(true) {
@@ -47,9 +46,15 @@ public class Main{
 						ct.manualDumpCSV();
 						break;
 					case 3:
-						ct.searchCollectedInfo();
+						ct.checkCollectedInfo();
 						break;
 					case 4:
+						ct.manualAddAccount();
+						break;
+					case 5:
+						ct.manualCheckAccount();
+						break;
+					case 6:
 						return;
 					default:
 						break;

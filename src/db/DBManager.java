@@ -7,5 +7,5 @@ public abstract class DBManager {
 	public abstract Object findByKey(ArrayList<String> keyValues) throws Exception;
 	
 	// 무조건 insert. 결과 int가 0이면 실패, 0 이상이면 n개 삽입 성공
-	protected abstract int insert(Object obj) throws Exception;
+	public abstract int insert(Object obj) throws Exception;
 }

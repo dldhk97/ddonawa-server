@@ -1,4 +1,4 @@
-package enums;
+package network;
 
 import java.io.Serializable;
 

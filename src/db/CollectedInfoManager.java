@@ -93,7 +93,7 @@ public class CollectedInfoManager extends DBManager {
 	}
 
 	@Override
-	protected int insert(Object obj) throws Exception {
+	public int insert(Object obj) throws Exception {
 		CollectedInfo collectedInfo = (CollectedInfo)obj;
 //		IOHandler.getInstance().log("[수집정보 추가 요청]" + collectedInfo.getProductName() + ", " + collectedInfo.getCollectedDate().toString());
 		

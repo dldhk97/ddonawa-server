@@ -1,4 +1,4 @@
-package ui;
+package console;
 
 public class Menu {
 	public void welcome() {
@@ -19,10 +19,12 @@ public class Menu {
 	
 	public void show() {
 		System.out.println("--------------------------------------------------");
-		System.out.println("1. 웹 파싱 테스트");
+		System.out.println("1. 수집정보 웹 파싱");
 		System.out.println("2. CSV 파일 덤프");
-		System.out.println("3. 상품 조회 테스트");
-		System.out.println("4. 종료");
+		System.out.println("3. 수집정보 조회");
+		System.out.println("4. 계정 추가 테스트");
+		System.out.println("5. 계정 조회 테스트");
+		System.out.println("6. 종료");
 		System.out.println("--------------------------------------------------");
 	}
 	

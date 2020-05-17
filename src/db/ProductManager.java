@@ -40,7 +40,7 @@ public class ProductManager extends DBManager {
 
 	
 	@Override
-	protected int insert(Object obj) throws Exception {
+	public int insert(Object obj) throws Exception {
 		Product product = (Product)obj;
 		
 		// 상품정보 테이블에 추가할 열 정보 배열 생성

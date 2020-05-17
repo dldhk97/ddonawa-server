@@ -1,10 +1,12 @@
-package ui;
+package console;
 
 import java.util.ArrayList;
 
 import db.CollectedInfoManager;
+import model.Account;
 import model.CollectedInfo;
 import model.Product;
+import task.AccountTask;
 import task.CSVReader;
 import task.CollectedInfoTask;
 import task.ProductTask;
@@ -68,7 +70,7 @@ public class ConsoleTask {
 	}
 	
 	// 수동으로 DB에서 상품정보를 선택, 해당 상품에 대한 역대 수집정보를 DB에서 모두 조회하는 메소드
-	public void searchCollectedInfo() {
+	public void checkCollectedInfo() {
 		// DB에서 상품정보 검색
 		ArrayList<Product> productList = searchProducts();
 		if(productList == null) {
@@ -106,5 +108,23 @@ public class ConsoleTask {
 		catch (Exception e) {
 			IOHandler.getInstance().log("ConsoleTask.searchCollectedInfo", e);
 		}
+	}
+	
+	// 수동 계정 추가
+	public void manualAddAccount() {
+		String accountId = IOHandler.getInstance().getLineByUser("추가할 계정의 ID를 입력하세요.");
+		String accountPw = IOHandler.getInstance().getLineByUser("추가할 계정의 PW를 입력하세요.");
+		Account account = new Account(accountId, accountPw);
+		
+		AccountTask at = new AccountTask();
+		at.register(account);
+	}
+	
+	// 수동 계정 조회
+	public void manualCheckAccount() {
+		String accountId = IOHandler.getInstance().getLineByUser("조회할 계정의 ID를 입력하세요.");
+		
+		AccountTask at = new AccountTask();
+		at.checkAccount(accountId);
 	}
 }

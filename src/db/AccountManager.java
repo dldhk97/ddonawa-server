@@ -10,9 +10,10 @@ public class AccountManager extends DBManager{
 
 	@Override
 	public Object findByKey(ArrayList<String> keyValues) throws Exception {
-		// 계정정보 테이블에서 조회할 열 목록(id)
+		// 계정정보 테이블에서 가져올 열 목록(id, pw)
 		ArrayList<String> tableColumns = new ArrayList<>(Arrays.asList(
-				DBInfo.TABLE_ACCOUNT_COULMN_ID.toString()
+				DBInfo.TABLE_ACCOUNT_COULMN_ID.toString(),
+				DBInfo.TABLE_ACCOUNT_COULMN_PW.toString()
 				));
 		
 		// 쿼리 생성
@@ -29,15 +30,16 @@ public class AccountManager extends DBManager{
 	}
 
 	@Override
-	protected int insert(Object obj) throws Exception {
+	public int insert(Object obj) throws Exception {
 		Account account = (Account)obj;
-//		IOHandler.getInstance().log("[카테고리 추가 요청]" + category.getId() + ", " + category.getName());
 		
-		// 품목정보 테이블에 추가할 열 정보 배열 생성
-		ArrayList<String> columns = new ArrayList<>(
-				Arrays.asList(DBInfo.TABLE_ACCOUNT_COULMN_ID.toString(), DBInfo.TABLE_ACCOUNT_COULMN_PW.toString()));
+		// 계정정보 테이블에 추가할 열 정보 배열 생성
+		ArrayList<String> columns = new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_ACCOUNT_COULMN_ID.toString(), 
+				DBInfo.TABLE_ACCOUNT_COULMN_PW.toString()
+				));
 		
-		// 품목정보 테이블에 추가할 데이터 정보 배열 생성
+		// 계정정보 테이블에 추가할 데이터 정보 배열 생성
 		ArrayList<String> values = new ArrayList<>(
 				Arrays.asList(account.getId(), account.getPw()));
 		
