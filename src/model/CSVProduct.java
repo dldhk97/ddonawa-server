@@ -24,10 +24,6 @@ public class CSVProduct implements Serializable{
 		this.price = price;
 	}
 	
-	public String toString() {
-		return "수집일자:" + collectedDate + ", 상품ID:" + productId + ", 품목ID:" + categoryId + ", 품목명:" + categoryName +  ", 상품명:" + productName + ", 실가격:" + price; 
-	}
-	
 	public String getCollectedDate() {
 		return collectedDate;
 	}
@@ -74,5 +70,10 @@ public class CSVProduct implements Serializable{
 	
 	public void setPrice(String price) {
 		this.price = price;
+	}
+	
+	@Override
+	public String toString() {
+		return collectedDate + ", " + productId + ", " + categoryId + ", " + categoryName +  ", " + productName + ", " + price; 
 	}
 }

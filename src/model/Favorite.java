@@ -40,5 +40,10 @@ public class Favorite implements Serializable{
 	public void setTargetPrice(double targetPrice) {
 		this.targetPrice = targetPrice;
 	}
+	
+	@Override
+	public String toString() {
+		return accountId + ", " + productName + ", " + String.valueOf(targetPrice);
+	}
 
 }

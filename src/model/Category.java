@@ -40,4 +40,9 @@ public class Category implements Serializable{
 	public void setBigCategoryId(String bigCategoryId) {
 		this.bigCategoryId = bigCategoryId;
 	}
+	
+	@Override
+	public String toString() {
+		return id + ", " + name + ", " + bigCategoryId;
+	}
 }

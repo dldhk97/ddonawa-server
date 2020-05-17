@@ -40,6 +40,7 @@ public class CSVReader {
 				}
 			});
 			
+			int succeedCnt = 0;
 			// 탐색한 모든 .csv 파일에 대하여 파싱
 			for(String fileName : fileList) {
 				String filePath = null;
@@ -69,13 +70,16 @@ public class CSVReader {
 					
 					// 1000항목당 한번씩 알림
 					if(cnt % 1000 == 0) {
-						IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 중(" + cnt + "/" + productList.size() + ")");
+						int percentage = (100 * cnt / productList.size());
+						IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 중(" + cnt + "/" + productList.size() + ")" + "(" + percentage + "%)");
 					}
 					cnt++;
 				}
 				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 완료(총 " + productList.size() + "개)");
+				succeedCnt++;
 			}
-			return true;
+			IOHandler.getInstance().log("[공공데이터 DB] " + path +  " 경로 내 덤프 완료(" + succeedCnt + "/" + fileList.length + ")");
+			return succeedCnt == fileList.length ? true : false;
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("CSVReader.dumpCSV-Unknown",e);
@@ -108,7 +112,6 @@ public class CSVReader {
 	            result.add(product);
 	        }
 	        bufferedReader.close();
-	        IOHandler.getInstance().log("CSV 파싱 완료!");
 	    } catch (FileNotFoundException e) {
 	        IOHandler.getInstance().log("CSVReader.read-FileNotFound", e);
 	    } catch( IOException e ) {
@@ -143,6 +146,8 @@ public class CSVReader {
 		CollectedInfoManager cim = new CollectedInfoManager();
 		cim.upsert(collectedInfo);
 	}
+	
+	// ----------------------- CSVProduct to Object -----------------------------
 	
 	// CSV에서 추출한 CSVProduct 객체를 Product(상품정보) 객체로 변환
 	private Product createProduct(CSVProduct csvProduct) {

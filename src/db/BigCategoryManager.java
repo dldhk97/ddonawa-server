@@ -21,11 +21,12 @@ public class BigCategoryManager extends DBManager{
 				DBInfo.TABLE_BIGCATEGORY_COLUMN_ID.toString() + "` = '" + keyValues.get(0) + "'";
 	}
 	@Override
-	protected Object getModel(ArrayList<ArrayList<String>> received) {
+	protected ArrayList<BigCategory> getModelList(ArrayList<ArrayList<String>> received) {
+		ArrayList<BigCategory> result = new ArrayList<BigCategory>();
 		for(ArrayList<String> row : received) {
-			return new BigCategory(row.get(0), row.get(1));
+			result.add(new BigCategory(row.get(0), row.get(1)));
 		}
-		return null;
+		return result.size() > 0 ? result : null;
 	}
 	@Override
 	protected ArrayList<String> modelToStringArray(Object object){

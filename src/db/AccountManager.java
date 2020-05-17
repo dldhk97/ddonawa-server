@@ -7,6 +7,26 @@ import model.Account;
 
 public class AccountManager extends DBManager{
 	
+	// 사용자명에 문자열이 포함된 열을 반환한다.
+	public ArrayList<Account> searchByAccountId(String str) throws Exception {
+		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
+		ArrayList<String> tableColumns = getTableColumnsAll();
+		
+		// 따옴표 처리
+		String searchStr = str.replace("'", "''");
+		
+		// 쿼리 생성
+		String query = "SELECT * FROM `" +
+				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_ACCOUNT.toString() + "` WHERE `" +
+				DBInfo.TABLE_ACCOUNT_COLUMN_ID.toString() + "` LIKE '%" + searchStr + "%'";
+		
+		// 쿼리
+		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
+		
+		// 2차원 문자열 배열을 1차원 Account 배열로 변환 후 반환
+		return getModelList(receieved);
+	}
+	
 	@Override
 	protected  ArrayList<String> getTableColumnsAll(){
 		return new ArrayList<>(Arrays.asList(
@@ -21,11 +41,12 @@ public class AccountManager extends DBManager{
 				DBInfo.TABLE_ACCOUNT_COLUMN_ID.toString() + "` = '" + keyValues.get(0) + "'";
 	}
 	@Override
-	protected Object getModel(ArrayList<ArrayList<String>> received) {
+	protected ArrayList<Account> getModelList(ArrayList<ArrayList<String>> received) {
+		ArrayList<Account> result = new ArrayList<Account>();
 		for(ArrayList<String> row : received) {
-			return new Account(row.get(0), row.get(1));
+			result.add(new Account(row.get(0), row.get(1)));
 		}
-		return null;
+		return result.size() > 0 ? result : null;
 	}
 	@Override
 	protected ArrayList<String> modelToStringArray(Object object){

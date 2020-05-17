@@ -13,11 +13,13 @@ public class AccountTask {
 	public boolean register(Account account) {
 		AccountManager am = new AccountManager();
 		try {
-			ArrayList<String> keys = new ArrayList<String>(Arrays.asList(
-					account.getId()
-					));
+			if(isInvalidAccountInfo(account)) {
+				IOHandler.getInstance().log("ID 혹은 PW가 글러먹었습니다.");
+				return false;
+			}
+			ArrayList<Account> received = searchById(account.getId());
 			
-			if(am.findByKey(keys) != null) {
+			if(received != null) {
 				IOHandler.getInstance().log("해당 아이디는 중복입니다.");
 				return false;
 			}
@@ -38,45 +40,34 @@ public class AccountTask {
 		return false;
 	}
 	
-	// 반환형 만들고 메시지출력은 ConsoleTask에서 해라
-	public boolean checkAccount(String accountId) {
-		AccountManager am = new AccountManager();
+	public ArrayList<Account> searchById(String id){
 		try {
-			ArrayList<String> keys = new ArrayList<String>(Arrays.asList(
-					accountId
-					));
+			AccountManager am = new AccountManager();
+			ArrayList<Account> searchResult = am.searchByAccountId(id);
 			
-			Account received = (Account) am.findByKey(keys);
-			if(received != null) {
-				IOHandler.getInstance().log("계정 조회됨. ID : " + received.getId() + ", PW : " + received.getPw());
-				return true;
-			}
-			else {
-				IOHandler.getInstance().log("계정 조회되지 않음");
-				return false;
-			}
+			// 결과 반환
+			return searchResult;
 		} 
 		catch (Exception e) {
-			IOHandler.getInstance().log("[LoginManager.register]", e);
+			IOHandler.getInstance().log("AccountTask.search", e);
 		}
-		
-		return false;
+		return null;
 	}
 	
 	// 반환형 만들고 메시지출력은 ConsoleTask에서 해라
 	public LoginResult tryLogin(Account account) throws Exception{
-		AccountManager am = new AccountManager();
 		try {
-			Account searchedAccount = (Account)am.findByKey(new ArrayList<String>(Arrays.asList(account.getId())));
-			if(searchedAccount == null) {
+			ArrayList<Account> received = searchById(account.getId());
+			
+			if(received == null) {
 				// 아이디가 없는 경우
 				IOHandler.getInstance().log("해당되는 아이디가 없습니다.");
 				return LoginResult.ID_NOT_FOUND;
 			}
 			else {
 				// 아이디가 있는 경우
-				IOHandler.getInstance().log("해당되는 아이디가 있습니다.");
-				if(searchedAccount.getPw().equals(account.getPw())) {
+				Account dbAccount = received.get(0);
+				if(dbAccount.getPw().equals(account.getPw())) {
 					// 비밀번호가 일치한 경우
 					return LoginResult.SUCCEED;
 				}
@@ -90,4 +81,33 @@ public class AccountTask {
 			return LoginResult.ERROR;
 		}
 	}
+	
+	// ------------------- 계정 생성시 무결성 체크 ----------------------
+	
+	private boolean isInvalidAccountInfo(Account account) {
+		String id = account.getId();
+		if(id.matches("admin")) {
+			return true;	// 어드민 사용 불가
+		}
+		else if(id.length() < 4) {
+			return true;	// 그래도 4글자는 되야지
+		}
+		else if(id.matches(".*[^xfe0-9a-zA-Z\\\\s].*")){
+			return true;	// 특수문자, 공백, 한글 사용 불가
+		}
+		
+		String pw = account.getPw();
+		if(pw.contains(id)) {
+			return true;	// 비밀번호 안에 아이디가 포함 불가
+		}
+		else if(pw.length() < 4) {
+			return true;
+		}
+		else if(pw.matches(".*[^xfe0-9a-zA-Z\\\\\\\\s!@#$%^&*(),.?\\\\\\\":{}|<>\\=\\-\\+\\_\\[\\]].*")){
+			return true;	// 비밀번호는 특수문자 가능. 근데 세미콜론이랑 따옴표는 안되게 함.
+		}
+		
+		return false;
+	}
+	
 }

@@ -9,18 +9,10 @@ import utility.IOHandler;
 
 public class CollectedInfoManager extends DBManager {
 
-	// 상품명으로 탐색하여 수집정보 배열 반환. 날짜는 위에서부터 최신순으로 들어있음.
+	// 상품명이 일치한 수집정보 배열 반환. 날짜는 위에서부터 최신순으로 들어있음.
 	public ArrayList<CollectedInfo> findByProductName(String productName) throws Exception {
 		// 수집정보 테이블에서 조회할 열 목록(상품정보_이름, 수집일자, 가격, URL, 조회수, 썸네일)
-		ArrayList<String> tableColumns = new ArrayList<>(
-				Arrays.asList(
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRICE.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_URL.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_HITS.toString(),
-						DBInfo.TABLE_COLLECTEDINFO_COLUMN_THUMBNAIL.toString()
-						));
+		ArrayList<String> tableColumns = getTableColumnsAll();
 		
 		// 따옴표 처리
 		productName = productName.replace("'", "''");
@@ -32,20 +24,10 @@ public class CollectedInfoManager extends DBManager {
 				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString() + "` DESC";
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
+		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
 		
-		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
-		for(ArrayList<String> row : receieved) {
-			productName = row.get(0);
-			Date collectedDate = Date.valueOf(row.get(1));
-			double price = Double.valueOf(row.get(2));
-			String url = row.get(3);
-			long hits = row.get(4) != null ? Long.parseLong(row.get(4)) : 0;
-			String thumbnail = row.get(5);
-			
-			result.add(new CollectedInfo(productName, collectedDate, price, url, hits, thumbnail));
-		}
-		return result.size() > 0 ? result : null;
+		// 2차원 문자열 배열을 1차원 CollectedInfo 배열로 변환 후 반환
+		return getModelList(received);
 	}
 	
 	protected int update(Object obj) throws Exception{
@@ -165,7 +147,8 @@ public class CollectedInfoManager extends DBManager {
 				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString() + "` = '" + keyValues.get(1) + "'";
 	}
 	@Override
-	protected Object getModel(ArrayList<ArrayList<String>> received) {
+	protected ArrayList<CollectedInfo> getModelList(ArrayList<ArrayList<String>> received) {
+		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
 		for(ArrayList<String> row : received) {
 			String productName = row.get(0);
 			Date collectedDate = Date.valueOf(row.get(1));
@@ -174,9 +157,9 @@ public class CollectedInfoManager extends DBManager {
 			long hits = row.get(4) != null ? Long.parseLong(row.get(4)) : 0;
 			String thumbnail = row.get(5);
 			
-			return new CollectedInfo(productName, collectedDate, price, url, hits, thumbnail);
+			result.add(new CollectedInfo(productName, collectedDate, price, url, hits, thumbnail));
 		}
-		return null;
+		return result.size() > 0 ? result : null;
 	}
 	@Override
 	protected ArrayList<String> modelToStringArray(Object object){

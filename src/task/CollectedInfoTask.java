@@ -59,11 +59,11 @@ public class CollectedInfoTask {
 				// 파싱된 상품명을 DB에 있는 상품명으로 교체
 				targetInfo.setProductName(product.getName());
 				CollectedInfoManager cim = new CollectedInfoManager();
-				boolean isUpserted = cim.upsert(targetInfo);						// 웹에서 파싱한 최종 최저가 상품을 DB에 업데이트함.
+				boolean isUpserted = cim.upsert(targetInfo);						// 웹에서 파싱한 최종 최저가 상품을 DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
 				if(isUpserted) {
 					IOHandler.getInstance().log("[파싱 수집정보 DB에 갱신 성공]" + product.getName() + ", 가격 : " + targetInfo.getPrice());
+					return true;
 				}
-				return true;
 			}
 		}
 		catch(Exception e) {
@@ -72,6 +72,20 @@ public class CollectedInfoTask {
 		
 		return false;
 	}
+	
+	public ArrayList<CollectedInfo> findByProduct(Product product) {
+		CollectedInfoManager cim = new CollectedInfoManager();
+		try {
+			return cim.findByProductName(product.getName());
+			
+		} 
+		catch (Exception e) {
+			IOHandler.getInstance().log("ConsoleTask.searchCollectedInfo", e);
+		}
+		return null;
+	}
+	
+	// ---------------------------------------------------------
 	
 	// 수집정보 목록 중 상품명과 비교해서 부정확한 수집정보는 배제한다.
 	private ArrayList<CollectedInfo> filtering(Product product, ArrayList<CollectedInfo> infoList) {
@@ -157,7 +171,7 @@ public class CollectedInfoTask {
 		return result;
 	}
 	
-	// ---------------------------------------------------------------- //
+	// ----------------------------------------------------------------
 	// 문자열 관련 메소드
 	
 	// 코드란 A-Za-z0-9로 시작하거나 끝나는 연속된 문자열(n자리 이상)을 말한다.(n=MIN_CODE_RECOGNIZE_LENGTH)
@@ -171,8 +185,8 @@ public class CollectedInfoTask {
 			for(String word : str.split(" ")) {
 				// 코드로 인식 가능한 최소 길이 이상이면 연속적인 영어/숫자인지 확인
 				if(word.length() >= MIN_CODE_RECOGNIZE_LENGTH) {
-					// 영어/숫자로 시작하고 영어/숫자로 끝나는지 체크 중간에 - _ + 가 있어도 된다.
-					if(word.matches("^[A-Za-z0-9]*-*_*\\+*[A-Za-z0-9]*$")) {
+					// 영어/숫자로 시작하고 영어/숫자로 끝나는지 체크 중간에 - _ + . 가 있어도 된다.
+					if(word.matches("^[A-Za-z0-9]*-*_*\\+*\\.*[A-Za-z0-9]*$")) {
 						// 길이가 긴 녀석을 코드로 쓴다.
 						if(code == null) {
 							code = word;

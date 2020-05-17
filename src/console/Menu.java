@@ -20,11 +20,14 @@ public class Menu {
 	public void show() {
 		System.out.println("--------------------------------------------------");
 		System.out.println("1. 수집정보 웹 파싱");
-		System.out.println("2. CSV 파일 덤프");
-		System.out.println("3. 수집정보 조회");
-		System.out.println("4. 계정 추가 테스트");
-		System.out.println("5. 계정 조회 테스트");
-		System.out.println("6. 종료");
+		System.out.println("2. 수집정보 조회");
+		System.out.println("3. CSV 파일 덤프");
+		System.out.println("4. 계정 추가");
+		System.out.println("5. 계정 조회");
+		System.out.println("6. 품목정보 조회");
+		System.out.println("7. 찜목록 추가");
+		System.out.println("8. 찜목록 조회");
+		System.out.println("9. 종료");
 		System.out.println("--------------------------------------------------");
 	}
 	

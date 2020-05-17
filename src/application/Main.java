@@ -43,10 +43,10 @@ public class Main{
 						ct.manualCollectInfo();
 						break;
 					case 2:
-						ct.manualDumpCSV();
+						ct.checkCollectedInfo();
 						break;
 					case 3:
-						ct.checkCollectedInfo();
+						ct.manualDumpCSV();
 						break;
 					case 4:
 						ct.manualAddAccount();
@@ -55,6 +55,15 @@ public class Main{
 						ct.manualCheckAccount();
 						break;
 					case 6:
+						ct.manualCheckCategory();
+						break;
+					case 7:
+						ct.manualAddFavorites();
+						break;
+					case 8:
+						ct.manualCheckFavorites();
+						break;
+					case 9:
 						return;
 					default:
 						break;

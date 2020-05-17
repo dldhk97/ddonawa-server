@@ -7,13 +7,10 @@ import model.Product;
 
 public class ProductManager extends DBManager {
 	
-	public ArrayList<Product> searchByStr(String str) throws Exception {
+	// 문자열이 포함된 상품명을 가진 상품정보의 목록을 가져온다.
+	public ArrayList<Product> searchByProductName(String str) throws Exception {
 		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
-		ArrayList<String> tableColumns = new ArrayList<>(
-				Arrays.asList(
-						DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString(),
-						DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString()
-						));
+		ArrayList<String> tableColumns = getTableColumnsAll();
 		
 		// 따옴표 처리
 		String searchStr = str.replace("'", "''");
@@ -24,13 +21,10 @@ public class ProductManager extends DBManager {
 				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString() + "` LIKE '%" + searchStr + "%'";
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
-		ArrayList<Product> result = receieved.size() > 0 ? new ArrayList<Product>() : null;
+		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
 		
-		for(ArrayList<String> row : receieved) {
-			result.add(new Product(row.get(0), row.get(1)));
-		}
-		return result;
+		// 2차원 문자열 배열을 1차원 Product 배열로 변환 후 반환
+		return getModelList(received);
 	}
 	
 	@Override
@@ -47,11 +41,12 @@ public class ProductManager extends DBManager {
 				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString() + "` = '" + keyValues.get(0) + "'";
 	}
 	@Override
-	protected Object getModel(ArrayList<ArrayList<String>> received) {
+	protected ArrayList<Product> getModelList(ArrayList<ArrayList<String>> received) {
+		ArrayList<Product> result = new ArrayList<Product>();
 		for(ArrayList<String> row : received) {
-			return new Product(row.get(0), row.get(1));
+			result.add(new Product(row.get(0), row.get(1)));
 		}
-		return null;
+		return result.size() > 0 ? result : null;
 	}
 	@Override
 	protected ArrayList<String> modelToStringArray(Object object) {

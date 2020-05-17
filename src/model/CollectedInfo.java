@@ -15,12 +15,6 @@ public class CollectedInfo implements Serializable{
 	private long hits; 				// 조회수
 	private String thumbnail;		// 썸네일
 	
-//	public CollectedInfo(String productName, Date collectedDate, double price) {
-//		this.productName = productName;
-//		this.collectedDate = collectedDate;
-//		this.price = price;
-//	}
-	
 	public CollectedInfo(String productName, Date collectedDate, double price, String url, long hits, String thumbnail) {
 		this.productName = productName;
 		this.collectedDate = collectedDate;
@@ -76,6 +70,18 @@ public class CollectedInfo implements Serializable{
 	
 	public void setThumbnail(String thumbnail) {
 		this.thumbnail = thumbnail;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(productName + ", " + collectedDate.toString() + ", " + String.valueOf(price) + ", ");
+		if(url != null)
+			sb.append(url + ", ");
+		sb.append(String.valueOf(hits));
+		if(thumbnail != null)
+			sb.append(", "+ thumbnail);
+		
+		return sb.toString();
 	}
 	
 }

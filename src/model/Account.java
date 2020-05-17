@@ -31,5 +31,10 @@ public class Account implements Serializable{
 		this.pw = pw;
 	}
 	
+	@Override
+	public String toString() {
+		return id + ", " + pw;
+	}
+	
 
 }
