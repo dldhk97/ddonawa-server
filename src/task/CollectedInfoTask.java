@@ -12,11 +12,15 @@ import utility.IOHandler;
 
 public class CollectedInfoTask {
 	private final int MIN_CODE_RECOGNIZE_LENGTH = 4;		// n자리 이상부터 A-Za-z0-9로 시작하고 끝나는 단어는 코드로 인식함. 정확성 상승을 위해 사용됨.
-	private final int MAX_SIMILAR_POINT = 40;				// 유사도가 n이하는 되어야 고려대상으로 하겠다는 의미. 유사도는 0에 가까울수록 원본과 유사한 것이다.
+	private final double MIN_SIMILAR_PERCENTAGE = 0;		// 유사도가 n 이상은 되어야 고려대상으로 하겠다는 의미.
 	
 	// 상품정보로 다나와와 네이버쇼핑 파싱 후 가격 비교, DB에 누적
 	public boolean collect(Product product) {
+		boolean isUpdated = false;
 		try {
+			// 디버깅용 시간측정
+			long debugStartTime = System.currentTimeMillis();
+			
 			// 다나와 파싱
 			DanawaParser dp = new DanawaParser();
 			ArrayList<CollectedInfo> danawaResults = dp.parse(product.getName());
@@ -33,44 +37,45 @@ public class CollectedInfoTask {
 			CollectedInfo danawaInfo = getMostInexpensive(danawaResults);
 			CollectedInfo naverShopInfo = getMostInexpensive(naverShopResults);
 			
-			if(danawaInfo == null && naverShopInfo == null) {
-				return false;
-			}
-			
-			// 두 정보 가격 비교 후  최종 수집정보 선정
-			CollectedInfo targetInfo;
-			if(danawaInfo != null && naverShopInfo != null) {
-				targetInfo = danawaInfo.getPrice() > naverShopInfo.getPrice() ? naverShopInfo : danawaInfo;
-			} 
-			else {
-				targetInfo = danawaInfo != null ? danawaInfo : naverShopInfo;
-			}
-			
-			if(danawaInfo != null) {
-				IOHandler.getInstance().log("[DEBUG]다나와 최저가 상품 : " + danawaInfo.getProductName() + ", 가격 : " + danawaInfo.getPrice());
-			}
-			if (naverShopInfo != null) {
-				IOHandler.getInstance().log("[DEBUG]네이버 최저가 상품 : " + naverShopInfo.getProductName() + ", 가격 : " + naverShopInfo.getPrice());
-			}
-			IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + targetInfo.getProductName() + ", 가격 : " + targetInfo.getPrice());
-			IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
-			
-			if(targetInfo != null) {
-				// 파싱된 상품명을 DB에 있는 상품명으로 교체
+			// 다나와 혹은 네이버쇼핑에서 검색결과가 존재하면
+			if(danawaInfo != null || naverShopInfo != null) {
+				
+				CollectedInfo targetInfo;
+				
+				// 다나와와 네이버쇼핑 둘다 검색결과가 존재하면 가격 낮은걸로 사용
+				if(danawaInfo != null && naverShopInfo != null) {
+					targetInfo = danawaInfo.getPrice() > naverShopInfo.getPrice() ? naverShopInfo : danawaInfo;
+				} 
+				else {
+					// 둘중 하나만 존재하면 null값이 아닌 녀석을 선택
+					targetInfo = danawaInfo != null ? danawaInfo : naverShopInfo;
+				}
+				
+				// 디버깅용 메시지 출력
+				if(danawaInfo != null) {
+					IOHandler.getInstance().log("[DEBUG]다나와 최저가 상품 : " + danawaInfo.getProductName() + ", 가격 : " + danawaInfo.getPrice());
+				}
+				if (naverShopInfo != null) {
+					IOHandler.getInstance().log("[DEBUG]네이버 최저가 상품 : " + naverShopInfo.getProductName() + ", 가격 : " + naverShopInfo.getPrice());
+				}
+				IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + targetInfo.getProductName() + ", 가격 : " + targetInfo.getPrice());
+				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
+				
+				// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
 				targetInfo.setProductName(product.getName());
 				CollectedInfoManager cim = new CollectedInfoManager();
-				boolean isUpserted = cim.upsert(targetInfo);						// 웹에서 파싱한 최종 최저가 상품을 DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
-				if(isUpserted) {
-					IOHandler.getInstance().log("[파싱 수집정보 DB에 갱신 성공]" + product.getName() + ", 가격 : " + targetInfo.getPrice());
-					return true;
-				}
+				isUpdated = cim.upsert(targetInfo);						// 웹에서 파싱한 최종 최저가 상품을 DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
 			}
+			
+			// 디버깅용 처리시간 표시
+			long debugEndTime = System.currentTimeMillis();
+			IOHandler.getInstance().log("[DEBUG]파싱 & 업데이트 처리 시간 : " + (debugEndTime - debugStartTime) / 1000.0 + "초");
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("CollectedInfoTask.collect", e);
 		}
 		
-		return false;
+		return isUpdated;
 	}
 	
 	public ArrayList<CollectedInfo> findByProduct(Product product) {
@@ -136,7 +141,7 @@ public class CollectedInfoTask {
 				CollectedInfo c = it.next();
 				if(!c.getProductName().contains(code)) {
 					it.remove();
-					IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + " 코드미포함으로 제외됨.");
+//					IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + " 코드미포함으로 제외됨.");
 				}
 			}
 		}
@@ -144,14 +149,20 @@ public class CollectedInfoTask {
 	
 	// 상품명과 수집정보명 두개의 유사도를 비교한다.
 	private void simliarFilter(Product product, ArrayList<CollectedInfo> infoList){
-		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
+		String productName = product.getName().replaceAll("[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]", " ");
 		
 		for(Iterator<CollectedInfo> it = infoList.iterator() ; it.hasNext();) {
 			CollectedInfo c = it.next();
-			int similarPoint = levenshteinDistance(product.getName(), c.getProductName());
-			if(similarPoint > MAX_SIMILAR_POINT) {
-				result.remove(c);
+			int similarPoint = levenshteinDistance(productName, c.getProductName());
+			double similarPercentage = 100 - (similarPoint * 100 / productName.length());
+			if(similarPercentage < MIN_SIMILAR_PERCENTAGE) {
+				it.remove();
+//				IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + "의 유사도 : " + similarPercentage + "% => 유사도 탈락");
 			}
+//			else {
+//				IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + "의 유사도 : " + similarPercentage + "%");
+//			}
+			
 		}
 	}
 	
@@ -216,8 +227,8 @@ public class CollectedInfoTask {
 			}
 			
 			// 유사도 측정 전 특수기호 모두 삭제
-			longStr = longStr.replaceAll("[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]", "");
-			shortStr = shortStr.replaceAll("[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]", "");
+			longStr = longStr.replaceAll("[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]", " ");
+			shortStr = shortStr.replaceAll("[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]", " ");
 			
 			int longStrLen = longStr.length() + 1;
 			int shortStrLen = shortStr.length() + 1;

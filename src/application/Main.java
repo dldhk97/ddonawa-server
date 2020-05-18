@@ -1,15 +1,9 @@
 package application;
 
-import java.util.ArrayList;
-
 import console.ConsoleTask;
 import console.Menu;
 import db.DBConnector;
-import model.Product;
 import parser.SeleniumManager;
-import task.CSVReader;
-import task.CollectedInfoTask;
-import task.ProductTask;
 import utility.IOHandler;
 
 public class Main{
@@ -20,15 +14,8 @@ public class Main{
 	
 	private static void run() {
 		try {
-			// 프로그램이 종료될 때 호출되는 메소드
-			Runtime rt = Runtime.getRuntime();
-			rt.addShutdownHook(new Thread() {
-				public void run() {
-					SeleniumManager.getInstance().quit();
-					DBConnector.getInstance().close();
-					IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
-				}
-			});
+			prepare();
+			
 			
 			Menu menu = new Menu();
 			menu.welcome();
@@ -63,7 +50,7 @@ public class Main{
 					case 8:
 						ct.manualCheckFavorites();
 						break;
-					case 9:
+					case 0:
 						return;
 					default:
 						break;
@@ -77,6 +64,25 @@ public class Main{
 		catch(Exception e) {
 			IOHandler.getInstance().log("Main.run", e);
 		}
+	}
+	
+	private static void prepare() {
+		IOHandler.getInstance().log("[SYSTEM]서버 실행 준비 중!");
+		
+		// 프로세스 종료되는 것 감지해서 종료메소드 호출하게 준비함.
+		Runtime rt = Runtime.getRuntime();
+		rt.addShutdownHook(new Thread() {
+			public void run() {
+				SeleniumManager.getInstance().quit();
+				DBConnector.getInstance().close();
+				IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
+			}
+		});
+		
+		// 셀레니움 파서 미리 로드
+		SeleniumManager.getInstance();
+		
+		IOHandler.getInstance().log("[SYSTEM]서버 실행 준비 완료!");
 	}
 	
 }
