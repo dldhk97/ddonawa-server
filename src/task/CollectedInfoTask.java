@@ -8,6 +8,7 @@ import model.CollectedInfo;
 import model.Product;
 import parser.DanawaParser;
 import parser.NaverShopParser;
+import parser.ParserManager;
 import utility.IOHandler;
 
 public class CollectedInfoTask {
@@ -22,49 +23,22 @@ public class CollectedInfoTask {
 			long debugStartTime = System.currentTimeMillis();
 			
 			// 다나와 파싱
-			DanawaParser dp = new DanawaParser();
-			ArrayList<CollectedInfo> danawaResults = dp.parse(product.getName());
-			
-			// 네이버 쇼핑에서 파싱
-			NaverShopParser nsp = new NaverShopParser();
-			ArrayList<CollectedInfo> naverShopResults = nsp.parse(product.getName());
+			ArrayList<CollectedInfo> received = ParserManager.getInstance().requestParse(product);
 			
 			// 정확한 수집정보 선정을 위한 유사도 필터링
-			danawaResults = filtering(product, danawaResults);
-			naverShopResults = filtering(product, naverShopResults);
+			received = filtering(product, received);
 			
 			// 목록 중 가장 저렴한 수집정보 선정
-			CollectedInfo danawaInfo = getMostInexpensive(danawaResults);
-			CollectedInfo naverShopInfo = getMostInexpensive(naverShopResults);
+			CollectedInfo mostInexpensiveInfo = getMostInexpensive(received);
 			
-			// 다나와 혹은 네이버쇼핑에서 검색결과가 존재하면
-			if(danawaInfo != null || naverShopInfo != null) {
-				
-				CollectedInfo targetInfo;
-				
-				// 다나와와 네이버쇼핑 둘다 검색결과가 존재하면 가격 낮은걸로 사용
-				if(danawaInfo != null && naverShopInfo != null) {
-					targetInfo = danawaInfo.getPrice() > naverShopInfo.getPrice() ? naverShopInfo : danawaInfo;
-				} 
-				else {
-					// 둘중 하나만 존재하면 null값이 아닌 녀석을 선택
-					targetInfo = danawaInfo != null ? danawaInfo : naverShopInfo;
-				}
-				
-				// 디버깅용 메시지 출력
-				if(danawaInfo != null) {
-					IOHandler.getInstance().log("[DEBUG]다나와 최저가 상품 : " + danawaInfo.getProductName() + ", 가격 : " + danawaInfo.getPrice());
-				}
-				if (naverShopInfo != null) {
-					IOHandler.getInstance().log("[DEBUG]네이버 최저가 상품 : " + naverShopInfo.getProductName() + ", 가격 : " + naverShopInfo.getPrice());
-				}
-				IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + targetInfo.getProductName() + ", 가격 : " + targetInfo.getPrice());
+			if(mostInexpensiveInfo != null) {
+				IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
 				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
 				
 				// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
-				targetInfo.setProductName(product.getName());
+				mostInexpensiveInfo.setProductName(product.getName());
 				CollectedInfoManager cim = new CollectedInfoManager();
-				isUpdated = cim.upsert(targetInfo);						// 웹에서 파싱한 최종 최저가 상품을 DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
+				isUpdated = cim.upsert(mostInexpensiveInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
 			}
 			
 			// 디버깅용 처리시간 표시

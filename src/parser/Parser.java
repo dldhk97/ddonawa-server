@@ -18,7 +18,7 @@ import utility.IOHandler;
 public abstract class Parser {
 	
 	// 문자열로 다나와/네이버쇼핑에 검색 후 목록 나열함.
-	public ArrayList<CollectedInfo> parse(String searchStr) {
+	public ArrayList<CollectedInfo> parse(String searchStr, SeleniumManager sm)  {
 		String orgHtml = null;
 		
 		try {
@@ -26,7 +26,8 @@ public abstract class Parser {
 			String encoded = toUTF8(searchStr);
 			
 			// 셀레니움으로 크롤링
-			orgHtml = SeleniumManager.getInstance().explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
+			orgHtml = sm.explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
+//			orgHtml = sm.waitForLoadCrawl(getBaseUrl() + encoded);
 			
 			// 필요한 정보 빼내기
 			return parseProduct(orgHtml);

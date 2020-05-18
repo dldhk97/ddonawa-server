@@ -1,7 +1,11 @@
 package parser;
 
+import java.util.ArrayList;
+
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import model.CollectedInfo;
 public class NaverShopParser extends Parser{
 	
 	private static final String BASE_URL = "https://search.shopping.naver.com/search/all.nhn?query=";

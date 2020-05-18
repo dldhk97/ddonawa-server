@@ -3,6 +3,7 @@ package application;
 import console.ConsoleTask;
 import console.Menu;
 import db.DBConnector;
+import parser.ParserManager;
 import parser.SeleniumManager;
 import utility.IOHandler;
 
@@ -50,7 +51,11 @@ public class Main{
 					case 8:
 						ct.manualCheckFavorites();
 						break;
+					case 9:
+						ct.workerThreadTest();
+						break;
 					case 0:
+						shutdown();
 						return;
 					default:
 						break;
@@ -69,20 +74,16 @@ public class Main{
 	private static void prepare() {
 		IOHandler.getInstance().log("[SYSTEM]서버 실행 준비 중!");
 		
-		// 프로세스 종료되는 것 감지해서 종료메소드 호출하게 준비함.
-		Runtime rt = Runtime.getRuntime();
-		rt.addShutdownHook(new Thread() {
-			public void run() {
-				SeleniumManager.getInstance().quit();
-				DBConnector.getInstance().close();
-				IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
-			}
-		});
-		
 		// 셀레니움 파서 미리 로드
-		SeleniumManager.getInstance();
+		ParserManager.getInstance();
 		
 		IOHandler.getInstance().log("[SYSTEM]서버 실행 준비 완료!");
+	}
+	
+	private static void shutdown() {
+		DBConnector.getInstance().close();
+		ParserManager.getInstance().close();
+		IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
 	}
 	
 }
