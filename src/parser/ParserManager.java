@@ -23,22 +23,21 @@ public class ParserManager {
 		return _instance;
 	}
 
-	private final int MAX_THREAD = 2; 		// 2의 배수만
+	private final int MAX_THREAD = 8; 		// 2의 배수만
 	private ExecutorService executorService;
-	
-	private ArrayList<SeleniumManager> seleniumManagers = new ArrayList<SeleniumManager>();
+	private ArrayList<SeleniumManager> seleniumManagerList = new ArrayList<SeleniumManager>();		// 셀레니움 종료를 위해 리스트 가지고있음.
 	
 	// 셀레니움 매니저 미리 로드
 	public ParserManager() {
-		for(int i = 0 ; i < MAX_THREAD; i++) {
-			seleniumManagers.add(new SeleniumManager());
-		}
-		
-		// TODO: 쓰레드 클래스 만들어서 셀레니움 매니저 박아넣어라
-		executorService = Executors.newFixedThreadPool(MAX_THREAD, new ThreadFactory ( ){
-			 public Thread newThread(Runnable r) {
-			 return new Thread(r);
-			 }});
+		// 커스텀 쓰레드 만들어서 셀레니움 매니저 박아넣음.
+		executorService = Executors.newFixedThreadPool(MAX_THREAD, new ThreadFactory (){
+			public Thread newThread(Runnable r) {
+				SeleniumManager sm = new SeleniumManager();
+				seleniumManagerList.add(sm);
+				CustomThread ct = new CustomThread(r, sm);
+				ct.setDaemon(true);
+				return ct;
+			}});
 	}
 	
 	// 다나와와 네이버쇼핑에서 상품찾기 파싱 요청을 한다.
@@ -46,20 +45,10 @@ public class ParserManager {
 		Future<ArrayList<CollectedInfo>> danawaResult = null, naverShopResult = null;
 		
 		try {
-			SeleniumManager sm1 = getFreeSelenium();
-			if(sm1 == null) {
-				//wait for freed selenium manager
-			}
+			ParserTask danawaTask = new ParserTask(product, new DanawaParser());
+			danawaResult = executorService.submit(danawaTask);
 			
-			ParserThread danawaThread = new ParserThread(product, new DanawaParser(), sm1);
-			danawaResult = executorService.submit(danawaThread);
-			
-			SeleniumManager sm2 = getFreeSelenium();
-			if(sm2 == null) {
-				//wait for freed selenium manager
-			}
-			
-			ParserThread naverShopThread = new ParserThread(product, new DanawaParser(), sm2);
+			ParserTask naverShopThread = new ParserTask(product, new DanawaParser());
 			naverShopResult = executorService.submit(naverShopThread);
 		}
 		catch(Exception e) {
@@ -83,28 +72,15 @@ public class ParserManager {
 		return null;
 	}
 	
-	private SeleniumManager getFreeSelenium() {
-		for(int i = 0 ; i < seleniumManagers.size() ; i++) {
-			SeleniumManager sm = seleniumManagers.get(i);
-			if(sm.getStatus() == SeleniumManagerStatus.FREE) {
-				return sm;
-			}
-		}
-		return null;
-	}
-	
 	public void close() {
-		requestCloseSeleniumManager();
-		if(!executorService.isShutdown() || !executorService.isTerminated()) {
-			executorService.shutdown();
-		}
-	}
-	
-	private void requestCloseSeleniumManager() {
-		for(SeleniumManager sm : seleniumManagers) {
+		for(SeleniumManager sm : seleniumManagerList) {
 			if(sm.isDriverAlive()) {
 				sm.quit();
 			}
+		}
+
+		if(!executorService.isShutdown() || !executorService.isTerminated()) {
+			executorService.shutdown();
 		}
 	}
 
