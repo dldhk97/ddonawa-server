@@ -5,9 +5,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import enums.SeleniumManagerStatus;
 import model.CollectedInfo;
 import model.Product;
 import utility.IOHandler;
@@ -22,15 +24,16 @@ public class ParserManager {
 			_instance = new ParserManager();
 		return _instance;
 	}
-
-	private final int MAX_THREAD = 8; 		// 2의 배수만
-	private ExecutorService executorService;
+	private final int CORE_POOL_SIZE = 4;
+	private final int MAX_POOL_SIZE = 8;
+	
+	private final ThreadPoolExecutor threadPoolExecutor;
 	private ArrayList<SeleniumManager> seleniumManagerList = new ArrayList<SeleniumManager>();		// 셀레니움 종료를 위해 리스트 가지고있음.
 	
 	// 셀레니움 매니저 미리 로드
 	public ParserManager() {
 		// 커스텀 쓰레드 만들어서 셀레니움 매니저 박아넣음.
-		executorService = Executors.newFixedThreadPool(MAX_THREAD, new ThreadFactory (){
+		threadPoolExecutor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new ThreadFactory (){
 			public Thread newThread(Runnable r) {
 				SeleniumManager sm = new SeleniumManager();
 				seleniumManagerList.add(sm);
@@ -38,6 +41,8 @@ public class ParserManager {
 				ct.setDaemon(true);
 				return ct;
 			}});
+		threadPoolExecutor.prestartAllCoreThreads();
+		
 	}
 	
 	// 다나와와 네이버쇼핑에서 상품찾기 파싱 요청을 한다.
@@ -46,10 +51,10 @@ public class ParserManager {
 		
 		try {
 			ParserTask danawaTask = new ParserTask(product, new DanawaParser());
-			danawaResult = executorService.submit(danawaTask);
+			danawaResult = threadPoolExecutor.submit(danawaTask);
 			
 			ParserTask naverShopThread = new ParserTask(product, new DanawaParser());
-			naverShopResult = executorService.submit(naverShopThread);
+			naverShopResult = threadPoolExecutor.submit(naverShopThread);
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("ParserManager.requestParse-submit", e);
@@ -73,14 +78,15 @@ public class ParserManager {
 	}
 	
 	public void close() {
+		// 셀레니움 매니저 종료
 		for(SeleniumManager sm : seleniumManagerList) {
 			if(sm.isDriverAlive()) {
 				sm.quit();
 			}
 		}
 
-		if(!executorService.isShutdown() || !executorService.isTerminated()) {
-			executorService.shutdown();
+		if(!threadPoolExecutor.isShutdown() || !threadPoolExecutor.isTerminated()) {
+			threadPoolExecutor.shutdown();
 		}
 	}
 

@@ -19,7 +19,6 @@ public class ParserTask implements Callable<ArrayList<CollectedInfo>>{
 
 	@Override
 	public ArrayList<CollectedInfo> call() throws Exception {
-		System.out.println("Callable Task Called");
 		CustomThread currentThread = (CustomThread)Thread.currentThread();
 		SeleniumManager seleniumManager = currentThread.getSeleniumManager();
 		return parser.parse(targetProduct.getName(), seleniumManager);

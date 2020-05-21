@@ -27,7 +27,6 @@ public abstract class Parser {
 			
 			// 셀레니움으로 크롤링
 			orgHtml = sm.explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
-//			orgHtml = sm.waitForLoadCrawl(getBaseUrl() + encoded);
 			
 			// 필요한 정보 빼내기
 			return parseProduct(orgHtml);

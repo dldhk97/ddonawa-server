@@ -12,7 +12,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import enums.SeleniumManagerStatus;
 import utility.IOHandler;
 
 public class SeleniumManager {
@@ -24,11 +23,6 @@ public class SeleniumManager {
 	private final int TIMEOUT_CRWAL = 3;
 	
 	private WebDriver driver;
-	private SeleniumManagerStatus status = SeleniumManagerStatus.UNKNOWN;
-	
-	public SeleniumManagerStatus getStatus() {
-		return status;
-	}
 
 	// 셀레니움 준비	
 	public SeleniumManager() {
@@ -39,37 +33,31 @@ public class SeleniumManager {
 		options.addArguments("headless");					// 크롬이 화면상 뜨지 않게 함
     	driver = new ChromeDriver(options);
     	
-    	status = SeleniumManagerStatus.FREE;
 	}
 	
 	// 암시적 대기 후 크롤 (페이지가 로딩되길 기다렸다가 크롤)
 	public String implicitCrawl(String url) throws Exception{
-		status = SeleniumManagerStatus.BUSY;
 		
         driver.manage().timeouts().implicitlyWait(TIMEOUT_CRWAL, TimeUnit.SECONDS);
 		driver.get(url);
 		
 		String result = driver.getPageSource();
-		status = SeleniumManagerStatus.FREE;
         return result;
 	}
 
 	// 명시적 대기 후 크롤 (클래스명이 로드될때까지 대기, 클래스가 끝까지 안보이면 예외발생)
 	public String explicitCrawl(String url, String className) throws Exception{
-		status = SeleniumManagerStatus.BUSY;
 		
         WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_CRWAL);
         driver.get(url);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className(className)));
       
 		String result = driver.getPageSource();
-		status = SeleniumManagerStatus.FREE;
 		return result;
 	}
 	
 	// 페이지가 모두 로드되기까지 기다리고나서 파싱
 	public String waitForLoadCrawl(String url) throws Exception{
-		status = SeleniumManagerStatus.BUSY;
 		ExpectedCondition<Boolean> expectation = new ExpectedCondition<Boolean>() {
 			@Override
 			public Boolean apply(WebDriver driver) {
@@ -81,7 +69,6 @@ public class SeleniumManager {
 		wait.until(expectation);
 		
 		String result = driver.getPageSource();
-		status = SeleniumManagerStatus.FREE;
 		return result;
 	}
 	
@@ -90,7 +77,6 @@ public class SeleniumManager {
 		if(driver != null) {
 			driver.quit();
 		}
-		status = SeleniumManagerStatus.DRIVER_CLOSED;
 		IOHandler.getInstance().log("[SYSTEM]Selenium driver Closed");
 	}
 	
