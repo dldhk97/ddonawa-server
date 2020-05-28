@@ -18,7 +18,7 @@ public class SeleniumManager {
 	
 	// 크롬으로 동작
 	public final String WEB_DRIVER_ID = "webdriver.chrome.driver";
-	public final String WEB_DRIVER_PATH = ".\\\\driver\\\\chromedriver_81.0.4044.138_win32.exe";
+	public final String WEB_DRIVER_PATH = ".\\\\driver\\\\chromedriver_83.0.4103.39_win32.exe";
 	
 	private final int TIMEOUT_CRWAL = 3;
 	
