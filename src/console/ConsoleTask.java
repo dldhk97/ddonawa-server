@@ -185,15 +185,6 @@ public class ConsoleTask {
 		printList(received);
 	}
 	
-	public void workerThreadTest() {
-//		final Channel channel = new Channel(5);
-//		channel.startWorkers();
-//		new ClientThread("aaa", channel).start();
-//		new ClientThread("bbb", channel).start();
-//		new ClientThread("ccc", channel).start();
-		System.out.println("deprecated");
-	}
-	
 	// ---------------------------------------------------
 	
 	// 수동으로 상품정보를 찾는 private 메소드.

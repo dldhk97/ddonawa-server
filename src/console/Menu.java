@@ -27,7 +27,6 @@ public class Menu {
 		System.out.println("6. 품목정보 조회");
 		System.out.println("7. 찜목록 추가");
 		System.out.println("8. 찜목록 조회");
-		System.out.println("9. Worker Thread 테스트");
 		System.out.println("0. 종료");
 		System.out.println("--------------------------------------------------");
 	}
