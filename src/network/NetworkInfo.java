@@ -3,7 +3,8 @@ package network;
 public enum NetworkInfo {
 	
 	SERVER_IP("localhost"),
-	SERVER_PORT("9218");
+	SERVER_PORT("9218"),
+	SERVER_TIMEOUT("10000");
 	
 	private String val;
 

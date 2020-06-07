@@ -7,7 +7,7 @@ import model.Account;
 
 public class AccountManager extends DBManager{
 	
-	// 사용자명에 문자열이 포함된 열을 반환한다.
+	// 사용자명에 문자열이 포함된 열을 반환한다. isExactly는 ==인지 LIKE인지 구분.
 	public ArrayList<Account> searchByAccountId(String str) throws Exception {
 		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
 		ArrayList<String> tableColumns = getTableColumnsAll();
@@ -16,9 +16,10 @@ public class AccountManager extends DBManager{
 		String searchStr = str.replace("'", "''");
 		
 		// 쿼리 생성
-		String query = "SELECT * FROM `" +
+		String query = query = "SELECT * FROM `" +
 				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_ACCOUNT.toString() + "` WHERE `" +
-				DBInfo.TABLE_ACCOUNT_COLUMN_ID.toString() + "` LIKE '%" + searchStr + "%'";
+				DBInfo.TABLE_ACCOUNT_COLUMN_ID.toString() + "` = '" + searchStr + "'";
+		
 		
 		// 쿼리
 		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
