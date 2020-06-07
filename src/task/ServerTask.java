@@ -8,9 +8,9 @@ import java.net.Socket;
 
 import model.Account;
 import network.Direction;
-import network.LoginResult;
 import network.Protocol;
 import network.ProtocolType;
+import network.Response;
 import utility.IOHandler;
 
 public class ServerTask implements Runnable{
@@ -39,6 +39,7 @@ public class ServerTask implements Runnable{
 					login(p);
 					break;
 				case REGISTER:
+					register(p);
 					break;
 				case EVENT:
 					break;
@@ -78,8 +79,23 @@ public class ServerTask implements Runnable{
 		
 		// DB에 로그인 정보로 체크해봄
 		Account account = (Account) p.getObject();
-		LoginResult loginResult = at.tryLogin(account);
-		Protocol protocol = new Protocol(ProtocolType.LOGIN, Direction.TO_CLIENT, loginResult);
+		Response response = at.tryLogin(account);
+		Protocol protocol = new Protocol(ProtocolType.LOGIN, Direction.TO_CLIENT, response, null);
+		
+		// 결과를 전송함.
+		ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+		objectOutputStream.writeObject(protocol);
+		objectOutputStream.flush();
+	}
+	
+	private void register(Protocol p) throws Exception{
+		// 회원가입 계정 작업 생성
+		AccountTask at = new AccountTask();
+		
+		// 계정 생성 요청함
+		Account account = (Account) p.getObject();
+		Response response = at.register(account);
+		Protocol protocol = new Protocol(ProtocolType.REGISTER, Direction.TO_CLIENT, response, null);
 		
 		// 결과를 전송함.
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());

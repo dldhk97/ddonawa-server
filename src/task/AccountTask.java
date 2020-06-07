@@ -1,43 +1,43 @@
 package task;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import db.AccountManager;
 import model.Account;
-import network.LoginResult;
+import network.Response;
+import network.ResponseType;
 import utility.IOHandler;
 
 public class AccountTask {
 	// 반환형 만들고 메시지출력은 ConsoleTask에서 해라
-	public boolean register(Account account) {
+	public Response register(Account account) {
 		AccountManager am = new AccountManager();
 		try {
 			if(isInvalidAccountInfo(account)) {
 				IOHandler.getInstance().log("ID 혹은 PW가 글러먹었습니다.");
-				return false;
+				return new Response(ResponseType.FAILED, "ID 혹은 PW가 글러먹었습니다.");
 			}
 			ArrayList<Account> received = searchById(account.getId());
 			
 			if(received != null) {
 				IOHandler.getInstance().log("해당 아이디는 중복입니다.");
-				return false;
+				return new Response(ResponseType.FAILED, "해당 아이디는 중복입니다.");
 			}
 			
 			if(am.insert(account) > 0) {
 				IOHandler.getInstance().log("계정이 등록되었습니다.");
-				return true;
+				return new Response(ResponseType.SUCCEED, "계정이 등록되었습니다.");
 			}
 			else {
-				IOHandler.getInstance().log("계정이 등록에 실패하였습니다.");
-				return false;
+				IOHandler.getInstance().log("계정 등록에 실패하였습니다.");
+				return new Response(ResponseType.FAILED, "계정이 등록에 실패하였습니다.");
 			}
 		} 
 		catch (Exception e) {
 			IOHandler.getInstance().log("[LoginManager.register]", e);
 		}
 		
-		return false;
+		return new Response(ResponseType.UNKNOWN, "알 수 없는 오류가 발생했습니다.");
 	}
 	
 	public ArrayList<Account> searchById(String id){
@@ -55,31 +55,31 @@ public class AccountTask {
 	}
 	
 	// 반환형 만들고 메시지출력은 ConsoleTask에서 해라
-	public LoginResult tryLogin(Account account) throws Exception{
+	public Response tryLogin(Account account) throws Exception{
 		try {
 			ArrayList<Account> received = searchById(account.getId());
 			
 			if(received == null) {
 				// 아이디가 없는 경우
 				IOHandler.getInstance().log("해당되는 아이디가 없습니다.");
-				return LoginResult.ID_NOT_FOUND;
+				return new Response(ResponseType.FAILED, "해당되는 아이디가 없습니다.");
 			}
 			else {
 				// 아이디가 있는 경우
 				Account dbAccount = received.get(0);
 				if(dbAccount.getPw().equals(account.getPw())) {
 					// 비밀번호가 일치한 경우
-					return LoginResult.SUCCEED;
+					return new Response(ResponseType.SUCCEED, "로그인 성공");
 				}
 				else {
 					// 비밀번호가 틀린 경우
-					return LoginResult.WRONG_PW;
+					return new Response(ResponseType.FAILED, "비밀번호가 틀렸습니다.");
 				}
 			}
 		} catch (Exception e) {
 			IOHandler.getInstance().log("[LoginManager.tryLogin]", e);
-			return LoginResult.ERROR;
 		}
+		return new Response(ResponseType.UNKNOWN, "알 수 없는 오류가 발생했습니다.");
 	}
 	
 	// ------------------- 계정 생성시 무결성 체크 ----------------------
