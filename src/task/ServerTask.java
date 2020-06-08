@@ -24,14 +24,16 @@ import utility.IOHandler;
 public class ServerTask implements Runnable{
 	
 	private final Socket clientSocket;
+	private final String clientIP;
 	
 	public ServerTask(Socket clientSocket) {
 		this.clientSocket = clientSocket;
+		this.clientIP = clientSocket.getInetAddress().toString();
 	}
 
 	@Override
 	public void run() {
-		IOHandler.getInstance().log("[담당일찐 스레드] 스레드 생성 완료");
+		IOHandler.getInstance().log("[" + clientIP + "] 스레드 생성 완료");
 		
 		try {
 			ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
@@ -76,7 +78,7 @@ public class ServerTask implements Runnable{
 				e.printStackTrace();
 			}
 		}
-		IOHandler.getInstance().log("[담당일찐 스레드] 스레드 종료됨");
+		IOHandler.getInstance().log("[" + clientIP + "] 스레드 종료됨");
 	}
 	
 	private void sendOutputStream(Protocol protocol) throws Exception {
@@ -117,19 +119,22 @@ public class ServerTask implements Runnable{
 		switch(receivedProtocol.getEventType()) {
 			case GET_BIG_CATEGORY:
 				onGetBigCategory(receivedProtocol);
+				IOHandler.getInstance().log("[" + clientIP + "] 대분류 결과 반환 완료");
 				break;
 			case GET_CATEGORY:
 				onGetCategory(receivedProtocol);
+				IOHandler.getInstance().log("[" + clientIP + "] 분류 결과 반환 완료");
 				break;
 			case SEARCH:
 				onSearch(receivedProtocol);
-				IOHandler.getInstance().log("[담당일찐 스레드] 검색 결과 반환 완료");
+				IOHandler.getInstance().log("[" + clientIP + "] 검색 결과 반환 완료");
 				break;
 			case GET_PRODUCT_DETAIL:
 				onGetProductDetail(receivedProtocol);
-				IOHandler.getInstance().log("[담당일찐 스레드] 상세 정보 반환 완료");
+				IOHandler.getInstance().log("[" + clientIP + "] 상세 정보 반환 완료");
 				break;
 			default:
+				IOHandler.getInstance().log("[" + clientIP + "] 이벤트 타입을 모르겠어요");
 				break;
 		}
 	}
@@ -184,10 +189,10 @@ public class ServerTask implements Runnable{
 		Response collectResponse = cit.collect(product);
 		switch (collectResponse.getResponseType()) {
 		case SUCCEED:
-			IOHandler.getInstance().log("수집 정보 업데이트 성공");
+			IOHandler.getInstance().log("[" + clientIP + "] 수집 정보 업데이트 성공");
 			break;
 		default:
-			IOHandler.getInstance().log("수집 정보 업데이트 실패. 그냥 기존 수집정보만 가져옴");
+			IOHandler.getInstance().log("["+ clientIP + "] 수집 정보 업데이트 실패. 그냥 기존 수집정보만 가져옴");
 			break;
 		}
 		

@@ -152,10 +152,10 @@ class ServerThread implements Runnable{
 		try {
 			while(isRunning) {
 				clientSocket = serverSocket.accept();		
-				IOHandler.getInstance().log("[SYSTEM]클라이언트 요청 받음");
+//				IOHandler.getInstance().log("[SYSTEM]클라이언트 요청 받음");
 				ServerTask st = new ServerTask(clientSocket);
 				threadPool.execute(st);
-				IOHandler.getInstance().log("[SYSTEM]서버 태스크 실행");
+//				IOHandler.getInstance().log("[SYSTEM]서버 태스크 실행");
 			}
 		}
 		catch (SocketException se) {
