@@ -8,6 +8,8 @@ import model.Category;
 import model.CollectedInfo;
 import model.Favorite;
 import model.Product;
+import model.Tuple;
+import network.Response;
 import task.AccountTask;
 import task.BigCategoryTask;
 import task.CSVReader;
@@ -57,7 +59,9 @@ public class ConsoleTask {
 		
 		// DB에서 해당되는 수집정보 조회
 		CollectedInfoTask cit = new CollectedInfoTask();
-		ArrayList<CollectedInfo> collectedInfoList = cit.findByProduct(targetProduct);
+		Tuple<Response, ArrayList<CollectedInfo>> result = cit.findByProduct(targetProduct);
+		
+		ArrayList<CollectedInfo> collectedInfoList = result.getSecond();
 		
 		if(collectedInfoList == null) {
 			IOHandler.getInstance().log("[SYSTEM]해당되는 상품의 수집 조회가 없습니다.");

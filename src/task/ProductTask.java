@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 import db.ProductManager;
 import model.Product;
+import model.Tuple;
 import network.Response;
 import network.ResponseType;
 import utility.IOHandler;
-import utility.Tuple;
 
 public class ProductTask {
 	

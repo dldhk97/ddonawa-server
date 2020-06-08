@@ -1,6 +1,8 @@
-package utility;
+package model;
 
-public class Tuple<o1, o2> {
+import java.io.Serializable;
+
+public class Tuple<o1, o2> implements Serializable {
 	private o1 first;
 	private o2 second;
 	

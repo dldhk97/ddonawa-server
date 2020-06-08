@@ -6,6 +6,9 @@ import java.util.Iterator;
 import db.CollectedInfoManager;
 import model.CollectedInfo;
 import model.Product;
+import model.Tuple;
+import network.Response;
+import network.ResponseType;
 import parser.DanawaParser;
 import parser.NaverShopParser;
 import parser.ParserManager;
@@ -52,10 +55,18 @@ public class CollectedInfoTask {
 		return isUpdated;
 	}
 	
-	public ArrayList<CollectedInfo> findByProduct(Product product) {
+	public Tuple<Response, ArrayList<CollectedInfo>> findByProduct(Product product) {
 		CollectedInfoManager cim = new CollectedInfoManager();
 		try {
-			return cim.findByProductName(product.getName());
+			ArrayList<CollectedInfo> result = cim.findByProductName(product.getName());
+			Response response = null;
+			if(result != null) {
+				response = new Response(ResponseType.SUCCEED, "수집 정보 획득 성공");
+			}
+			else {
+				response = new Response(ResponseType.FAILED, "수집 정보 획득 실패");
+			}
+			return new Tuple<Response, ArrayList<CollectedInfo>>(response, result);
 			
 		} 
 		catch (Exception e) {

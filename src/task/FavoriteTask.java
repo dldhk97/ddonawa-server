@@ -6,10 +6,10 @@ import db.FavoriteManager;
 import model.Account;
 import model.Favorite;
 import model.Product;
+import model.Tuple;
 import network.Response;
 import network.ResponseType;
 import utility.IOHandler;
-import utility.Tuple;
 
 public class FavoriteTask {
 	public Response addFavorite(Account account, Product product, double targetPrice) {
