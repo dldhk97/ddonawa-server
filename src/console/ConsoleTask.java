@@ -192,7 +192,7 @@ public class ConsoleTask {
 		String searchWord = IOHandler.getInstance().getLineByUser("[SYSTEM]DB에서 상품정보를 찾습니다. 검색어를 입력하세요.");
 		
 		ProductTask pt = new ProductTask();
-		return pt.searchByProductName(searchWord);
+		return pt.searchByProductName(searchWord).getSecond();
 	}
 	
 	// 수동으로 사용자 정보를 찾는 private 메소드

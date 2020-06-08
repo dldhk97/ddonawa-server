@@ -160,9 +160,9 @@ class ServerThread implements Runnable{
 		}
 		catch (SocketException se) {
 			if(!isRunning) {
-				IOHandler.getInstance().log("[SYSTEM]아마도 서버 소켓 종료에 의한 에러일듯");				
+				IOHandler.getInstance().log("[SYSTEM]아마도 서버 소켓 종료에 의한 클라이언트 소켓 에러일듯. 괜찮음");				
 			}else {
-				IOHandler.getInstance().log("[SYSTEM]소켓 에러.");
+				IOHandler.getInstance().log("[SYSTEM]소켓 에러 발생");
 				se.printStackTrace();
 			}
 			

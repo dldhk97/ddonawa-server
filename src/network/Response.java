@@ -3,16 +3,16 @@ package network;
 import java.io.Serializable;
 
 public class Response implements Serializable {
-	private final ResponseType type;
+	private final ResponseType responseType;
 	private final String message;
 	
-	public Response(ResponseType type, String message) {
-		this.type = type;
+	public Response(ResponseType responseType, String message) {
+		this.responseType = responseType;
 		this.message = message;
 	}
 
-	public ResponseType getType() {
-		return type;
+	public ResponseType getResponseType() {
+		return responseType;
 	}
 
 	public String getMessage() {

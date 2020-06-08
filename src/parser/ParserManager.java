@@ -24,8 +24,8 @@ public class ParserManager {
 			_instance = new ParserManager();
 		return _instance;
 	}
-	private final int CORE_POOL_SIZE = 4;
-	private final int MAX_POOL_SIZE = 8;
+	private final static int CORE_POOL_SIZE = 2;		// 기본 셀레니움 개수 (서버 실행 시 생성)
+	private final static int MAX_POOL_SIZE = 8;			// 최대 셀레니움 개수 (추가 생성. 느리다)
 	
 	private final ThreadPoolExecutor threadPoolExecutor;
 	private ArrayList<SeleniumManager> seleniumManagerList = new ArrayList<SeleniumManager>();		// 셀레니움 종료를 위해 리스트 가지고있음.
