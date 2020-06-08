@@ -19,8 +19,9 @@ public class CollectedInfoTask {
 	private final double MIN_SIMILAR_PERCENTAGE = 0;		// 유사도가 n 이상은 되어야 고려대상으로 하겠다는 의미.
 	
 	// 상품정보로 다나와와 네이버쇼핑 파싱 후 가격 비교, DB에 누적
-	public boolean collect(Product product) {
+	public Response collect(Product product) {
 		boolean isUpdated = false;
+		Response response = null;
 		try {
 			// 디버깅용 시간측정
 			long debugStartTime = System.currentTimeMillis();
@@ -35,13 +36,20 @@ public class CollectedInfoTask {
 			CollectedInfo mostInexpensiveInfo = getMostInexpensive(received);
 			
 			if(mostInexpensiveInfo != null) {
-				IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
-				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
+//				IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
+//				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
 				
 				// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
 				mostInexpensiveInfo.setProductName(product.getName());
 				CollectedInfoManager cim = new CollectedInfoManager();
 				isUpdated = cim.upsert(mostInexpensiveInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
+				if(isUpdated) {
+					response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트 성공!");
+				}
+				else {
+					// 실패한건 아니고 업데이트가 안이루어진거임. 가격 경쟁 패배해서.
+					response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
+				}
 			}
 			
 			// 디버깅용 처리시간 표시
@@ -50,9 +58,10 @@ public class CollectedInfoTask {
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("CollectedInfoTask.collect", e);
+			response = new Response(ResponseType.ERROR, "수집정보 갱신 중 서버에서 오류가 발생했습니다.");
 		}
 		
-		return isUpdated;
+		return response;
 	}
 	
 	public Tuple<Response, ArrayList<CollectedInfo>> findByProduct(Product product) {
@@ -83,29 +92,29 @@ public class CollectedInfoTask {
 		}
 		
 		try {
-			IOHandler.getInstance().log("[DEBUG]-------------------원본-------------------");
-			int debugCnt = 0;
-			for(CollectedInfo c : infoList) {
-				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-			}
+//			IOHandler.getInstance().log("[DEBUG]-------------------원본-------------------");
+//			int debugCnt = 0;
+//			for(CollectedInfo c : infoList) {
+//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+//			}
 			
 			// 필터 1 : 상품명에 코드가 있다면, 해당되는 수집정보만 남긴다.
 			codeFilter(product, infoList);
 			
-			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
-			debugCnt = 0;
-			for(CollectedInfo c : infoList) {
-				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-			}
+//			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
+//			debugCnt = 0;
+//			for(CollectedInfo c : infoList) {
+//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+//			}
 			
 			// 필터 2 : 유사도를 비교한다. 유사도가 n 이하인 경우에만 남긴다.
 			simliarFilter(product, infoList);
 			
-			IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
-			debugCnt = 0;
-			for(CollectedInfo c : infoList) {
-				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-			}
+//			IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
+//			debugCnt = 0;
+//			for(CollectedInfo c : infoList) {
+//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+//			}
 			return infoList.size() > 0 ? infoList : null;
 		}
 		catch(Exception e) {
@@ -118,7 +127,7 @@ public class CollectedInfoTask {
 	// 상품명에 코드가 있다면, 수집정보 배열에서 해당 코드가 포함된 수집정보만 남긴다.
 	private void codeFilter(Product product, ArrayList<CollectedInfo> infoList){
 		String code = findCode(product.getName());
-		IOHandler.getInstance().log("[DEBUG] 코드 : " + code);
+//		IOHandler.getInstance().log("[DEBUG] 코드 : " + code);
 		
 		if(code != null) {
 			for(Iterator<CollectedInfo> it = infoList.iterator() ; it.hasNext();) {

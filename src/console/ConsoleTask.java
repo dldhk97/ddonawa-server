@@ -10,6 +10,7 @@ import model.Favorite;
 import model.Product;
 import model.Tuple;
 import network.Response;
+import network.ResponseType;
 import task.AccountTask;
 import task.BigCategoryTask;
 import task.CSVReader;
@@ -35,14 +36,9 @@ public class ConsoleTask {
 		
 		// 웹 파싱하여 DB에 추가/업데이트
 		CollectedInfoTask cit = new CollectedInfoTask();
-		boolean isSucceed = cit.collect(targetProduct);
+		Response response = cit.collect(targetProduct);
 		
-		if(isSucceed) {
-			IOHandler.getInstance().log("[SYSTEM][수집정보 업데이트]상품 " + targetProduct.getName() + "의 수집정보가 갱신되었습니다.");
-		}
-		else {
-			IOHandler.getInstance().log("[SYSTEM][수집정보 업데이트]상품 " + targetProduct.getName() + "의 수집정보가 갱신되지 않았습니다.(갱신하지 않았거나, 갱신 실패함)");
-		}
+		IOHandler.getInstance().log("[SYSTEM][수집정보 업데이트]상품 " + targetProduct.getName() + " 업데이트 결과 : " + response.getMessage());
 	}
 	
 	// 수동으로 DB에서 상품정보를 선택, 해당 상품에 대한 역대 수집정보를 DB에서 모두 조회하는 메소드

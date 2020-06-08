@@ -177,8 +177,21 @@ public class ServerTask implements Runnable{
 		// 수집 정보 작업 생성
 		CollectedInfoTask cit = new CollectedInfoTask();
 		
-		// 사용자에게서 받아온 상품정보 획득 후 검색
+		// 사용자에게서 받아온 상품정보 획득
 		Product product = (Product) receivedProtocol.getObject();
+		
+		// 상품정보 파싱 해서 업데이트한다!
+		Response collectResponse = cit.collect(product);
+		switch (collectResponse.getResponseType()) {
+		case SUCCEED:
+			IOHandler.getInstance().log("수집 정보 업데이트 성공");
+			break;
+		default:
+			IOHandler.getInstance().log("수집 정보 업데이트 실패. 그냥 기존 수집정보만 가져옴");
+			break;
+		}
+		
+		// (업데이트된) 수집정보 가져온다.
 		Tuple<Response, ArrayList<CollectedInfo>> result = cit.findByProduct(product);
 		
 		// 응답 및 검색결과 받아옴
