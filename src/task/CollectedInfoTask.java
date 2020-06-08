@@ -56,23 +56,22 @@ public class CollectedInfoTask {
 	}
 	
 	public Tuple<Response, ArrayList<CollectedInfo>> findByProduct(Product product) {
-		CollectedInfoManager cim = new CollectedInfoManager();
+		Response response = null;
+		
 		try {
+			CollectedInfoManager cim = new CollectedInfoManager();
 			ArrayList<CollectedInfo> result = cim.findByProductName(product.getName());
-			Response response = null;
-			if(result != null) {
-				response = new Response(ResponseType.SUCCEED, "수집 정보 획득 성공");
-			}
-			else {
-				response = new Response(ResponseType.FAILED, "수집 정보 획득 실패");
-			}
+			
+			response = new Response(ResponseType.SUCCEED, "수집 정보 획득 성공");
 			return new Tuple<Response, ArrayList<CollectedInfo>>(response, result);
 			
 		} 
 		catch (Exception e) {
 			IOHandler.getInstance().log("ConsoleTask.searchCollectedInfo", e);
+			response = new Response(ResponseType.ERROR, "수집 정보 획득 중 서버에서 오류가 발생했습니다.");
 		}
-		return null;
+		
+		return new Tuple<Response, ArrayList<CollectedInfo>>(response, null);
 	}
 	
 	// ---------------------------------------------------------

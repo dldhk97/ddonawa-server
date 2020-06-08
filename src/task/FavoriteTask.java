@@ -27,7 +27,6 @@ public class FavoriteTask {
 			ProductTask pt = new ProductTask();
 			Tuple<Response, ArrayList<Product>> result = pt.searchByProductName(product.getName());
 			
-			Response response = result.getFirst();
 			ArrayList<Product> searchResult = result.getSecond();
 			
 			if(searchResult == null) {
@@ -51,23 +50,27 @@ public class FavoriteTask {
 			IOHandler.getInstance().log("FavoriteTask.addFavorite", e);
 		}
 		
-		return new Response(ResponseType.UNKNOWN, "알 수 없는 오류 발생!");
+		return new Response(ResponseType.ERROR, "찜 추가 중 서버에서 알 수 없는 오류가 발생했습니다.");
 	}
 	
-	public ArrayList<Favorite> findByAccount(Account account){
+	public Tuple<Response, ArrayList<Favorite>> findByAccount(Account account){
+		Response response = null;
 		try {
 			// 문자열 정규화 등 선처리. 현재는 별도의 처리 없이 그대로 DB에 SELECT함.
 			
 			// SQL에 검색
 			FavoriteManager fm = new FavoriteManager();
-			ArrayList<Favorite> received = fm.findByAccountId(account.getId());
+			ArrayList<Favorite> favoriteList = fm.findByAccountId(account.getId());
 			
 			// 결과 반환
-			return received;
+			response = new Response(ResponseType.SUCCEED, "찜 조회에 성공했습니다."); 
+			Tuple<Response, ArrayList<Favorite>> result = new Tuple<Response, ArrayList<Favorite>>(response, favoriteList);
+			return result;
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("FavoriteTask.findByAccount", e);
+			response = new Response(ResponseType.ERROR, "찜 조회 중 서버에서 오류가 발생했습니다."); 
 		}
-		return null;
+		return new Tuple<Response, ArrayList<Favorite>>(response, null);
 	}
 }

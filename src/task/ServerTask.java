@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import model.Account;
+import model.BigCategory;
+import model.Category;
 import model.CollectedInfo;
 import model.Product;
 import model.Tuple;
@@ -35,18 +37,18 @@ public class ServerTask implements Runnable{
 			ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
 			
 			// 일단 프로토콜로 해석
-			Protocol receievedProtocol = (Protocol) inputStream.readObject();
+			Protocol receivedProtocol = (Protocol) inputStream.readObject();
 			
 			// 프로토콜의 타입이 무엇인가?
-			switch(receievedProtocol.getType()){
+			switch(receivedProtocol.getType()){
 				case LOGIN:
-					onLogin(receievedProtocol);
+					onLogin(receivedProtocol);
 					break;
 				case REGISTER:
-					onRegister(receievedProtocol);
+					onRegister(receivedProtocol);
 					break;
 				case EVENT:
-					onEvent(receievedProtocol);
+					onEvent(receivedProtocol);
 					break;
 				case ERROR:
 					break;
@@ -83,12 +85,12 @@ public class ServerTask implements Runnable{
 		objectOutputStream.flush();
 	}
 	
-	private void onLogin(Protocol receievedProtocol) throws Exception{
+	private void onLogin(Protocol receivedProtocol) throws Exception{
 		// 로그인이면 계정 작업 생성
 		AccountTask at = new AccountTask();
 		
 		// 사용자에게서 받아온 계정 정보 획득 후 로그인 시도
-		Account account = (Account) receievedProtocol.getObject();
+		Account account = (Account) receivedProtocol.getObject();
 		Response response = at.tryLogin(account);
 		Protocol sendProtocol = new Protocol(ProtocolType.LOGIN, Direction.TO_CLIENT, response, null);
 		
@@ -96,12 +98,12 @@ public class ServerTask implements Runnable{
 		sendOutputStream(sendProtocol);
 	}
 	
-	private void onRegister(Protocol receievedProtocol) throws Exception{
+	private void onRegister(Protocol receivedProtocol) throws Exception{
 		// 회원가입 계정 작업 생성
 		AccountTask at = new AccountTask();
 		
 		// 사용자에게서 받아온 계정 정보 획득 후 회원가입 시도
-		Account account = (Account) receievedProtocol.getObject();
+		Account account = (Account) receivedProtocol.getObject();
 		Response response = at.register(account);
 		Protocol sendProtocol = new Protocol(ProtocolType.REGISTER, Direction.TO_CLIENT, response, null);
 		
@@ -110,18 +112,21 @@ public class ServerTask implements Runnable{
 	}
 	
 	// 이벤트는 경우의 수가 많기 때문에 한번 더 getEventType으로 케이스 분기함.
-	private void onEvent(Protocol receievedProtocol) throws Exception{
-		switch(receievedProtocol.getEventType()) {
+	// 이벤트 관련 Task들은 리턴값으로 Tuple을 받아, Response와 Object를 같이 받을 수 있게 함.
+	private void onEvent(Protocol receivedProtocol) throws Exception{
+		switch(receivedProtocol.getEventType()) {
 			case GET_BIG_CATEGORY:
+				onGetBigCategory(receivedProtocol);
 				break;
 			case GET_CATEGORY:
+				onGetCategory(receivedProtocol);
 				break;
 			case SEARCH:
-				onSearch(receievedProtocol);
+				onSearch(receivedProtocol);
 				IOHandler.getInstance().log("[담당일찐 스레드] 검색 결과 반환 완료");
 				break;
 			case GET_PRODUCT_DETAIL:
-				onGetProductDetail(receievedProtocol);
+				onGetProductDetail(receivedProtocol);
 				IOHandler.getInstance().log("[담당일찐 스레드] 상세 정보 반환 완료");
 				break;
 			default:
@@ -129,12 +134,12 @@ public class ServerTask implements Runnable{
 		}
 	}
 	
-	private void onSearch(Protocol receievedProtocol) throws Exception {
+	private void onSearch(Protocol receivedProtocol) throws Exception {
 		// 상품 작업 생성
 		ProductTask pt = new ProductTask();
 		
 		// 사용자에게서 받아온 검색어 획득 후 검색
-		String searchWord = (String) receievedProtocol.getObject();
+		String searchWord = (String) receivedProtocol.getObject();
 		Tuple<Response, ArrayList<Product>> productResult = pt.searchByProductName(searchWord);
 		
 		// 상품정보 응답 및 검색결과 받아옴
@@ -161,27 +166,64 @@ public class ServerTask implements Runnable{
 			}
 		}
 		
-		// 프로토콜 생성
+		// 상품정보+최신수집정보를 포함시킨 프로토콜 생성
 		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.SEARCH, response, (Object)totalResult);
 		
 		// 결과를 전송함.
 		sendOutputStream(sendProtocol);
 	}
 	
-	private void onGetProductDetail(Protocol receievedProtocol) throws Exception{
+	private void onGetProductDetail(Protocol receivedProtocol) throws Exception{
 		// 수집 정보 작업 생성
 		CollectedInfoTask cit = new CollectedInfoTask();
 		
 		// 사용자에게서 받아온 상품정보 획득 후 검색
-		Product product = (Product) receievedProtocol.getObject();
+		Product product = (Product) receivedProtocol.getObject();
 		Tuple<Response, ArrayList<CollectedInfo>> result = cit.findByProduct(product);
 		
 		// 응답 및 검색결과 받아옴
 		Response response = result.getFirst();
-		ArrayList<CollectedInfo> searchResult = result.getSecond();
+		ArrayList<CollectedInfo> collectedInfoList = result.getSecond();
 		
-		// 프로토콜 생성
-		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.GET_PRODUCT_DETAIL, response, (Object)searchResult); 
+		// 수집 정보를 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.GET_PRODUCT_DETAIL, response, (Object)collectedInfoList); 
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	private void onGetBigCategory(Protocol receivedProtocol) throws Exception{
+		// 대분류 작업 생성
+		BigCategoryTask bct = new BigCategoryTask();
+		
+		// 대분류 다 가져옴
+		Tuple<Response, ArrayList<BigCategory>> result = bct.getAllBigCategory();
+		
+		// 응답과, 대분류 분리
+		Response response = result.getFirst();
+		ArrayList<BigCategory> bigCategoryList = result.getSecond();
+		
+		// 대분류 목록을 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.GET_BIG_CATEGORY, response, (Object)bigCategoryList); 
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	private void onGetCategory(Protocol receivedProtocol) throws Exception{
+		// 분류 작업 생성
+		CategoryTask ct = new CategoryTask();
+		
+		// 사용자에게서 대분류 받음. 그걸로 검색
+		BigCategory bigCategory = (BigCategory) receivedProtocol.getObject();
+		Tuple<Response, ArrayList<Category>> result = ct.findByBigCategory(bigCategory);
+		
+		// 응답과, 분류 분리
+		Response response = result.getFirst();
+		ArrayList<Category> categoryList = result.getSecond();
+		
+		// 분류 목록 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.GET_CATEGORY, response, (Object)categoryList); 
 		
 		// 결과를 전송함.
 		sendOutputStream(sendProtocol);

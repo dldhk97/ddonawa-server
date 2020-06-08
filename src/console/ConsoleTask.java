@@ -117,21 +117,24 @@ public class ConsoleTask {
 	public void manualCheckCategory() {
 		// 대품목정보 모두 가져옴
 		BigCategoryTask bct = new BigCategoryTask();
-		ArrayList<BigCategory> bigCategoryList = bct.getAllBigCategory();
+		Tuple<Response, ArrayList<BigCategory>> bigCategoryReceived = bct.getAllBigCategory();
+		
+		ArrayList<BigCategory> bigCategoryList = bigCategoryReceived.getSecond();
 		
 		// 대품목정보 중 하나 선택
 		BigCategory selected = (BigCategory) selectObject(bigCategoryList);
 		
 		// 해당 대품목정보에 속하는 품목정보 다 가져옴
 		CategoryTask ct = new CategoryTask();
-		ArrayList<Category> received = ct.findByBigCategory(selected);
+		Tuple<Response, ArrayList<Category>> categoryReceived = ct.findByBigCategory(selected);
+		ArrayList<Category> categoryList = categoryReceived.getSecond();
 		
-		if(received == null) {
+		if(categoryList == null) {
 			IOHandler.getInstance().log("[SYSTEM]품목정보 조회 결과가 없습니다.");
 			return;
 		}
 		IOHandler.getInstance().log("[SYSTEM]품목정보 목록입니다.");
-		printList(received);
+		printList(categoryList);
 	}
 	
 	// 수동 찜목록 추가
@@ -179,14 +182,16 @@ public class ConsoleTask {
 		Account selected = (Account) selectObject(accountList);
 		
 		FavoriteTask ft = new FavoriteTask();
-		ArrayList<Favorite> received = ft.findByAccount(selected);
+		Tuple<Response, ArrayList<Favorite>> received = ft.findByAccount(selected);
 		
-		if(received == null) {
+		ArrayList<Favorite> favoriteList = received.getSecond();
+		
+		if(favoriteList == null) {
 			IOHandler.getInstance().log("[SYSTEM]찜 목록 조회 결과가 없습니다.");
 			return;
 		}
 		IOHandler.getInstance().log("[SYSTEM]찜 목록입니다.");
-		printList(received);
+		printList(favoriteList);
 	}
 	
 	// ---------------------------------------------------
