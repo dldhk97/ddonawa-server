@@ -29,7 +29,7 @@ public class BigCategoryManager extends DBManager{
 		return result.size() > 0 ? result : null;
 	}
 	@Override
-	protected ArrayList<String> modelToStringArray(Object object){
+	protected ArrayList<String> getValuesFromObject(Object object){
 		BigCategory bigCategory = (BigCategory) object;
 		return new ArrayList<>(Arrays.asList(
 					bigCategory.getId(), 

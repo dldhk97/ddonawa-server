@@ -45,7 +45,7 @@ public class CategoryManager extends DBManager{
 		return result.size() > 0 ? result : null;
 	}
 	@Override
-	protected ArrayList<String> modelToStringArray(Object object){
+	protected ArrayList<String> getValuesFromObject(Object object){
 		Category category = (Category) object;
 		return new ArrayList<>(Arrays.asList(
 				category.getId(), 

@@ -12,13 +12,15 @@ import utility.IOHandler;
 
 public class ProductTask {
 	
+	private final static int SELECT_LIMIT = 1000;
+	
 	// 사용자가 검색했을 때 동작하는 메소드. 검색하서 결과 상품 목록을 클라이언트에 반환함.
 	public Tuple<Response, ArrayList<Product>> searchByProductName(String searchWord) {
 		Response response = null;
 		try {
 			// SQL에 검색
 			ProductManager pm = new ProductManager();
-			ArrayList<Product> searchResult = pm.searchByProductName(searchWord);
+			ArrayList<Product> searchResult = pm.searchByProductName(searchWord, SELECT_LIMIT);
 			
 			response = new Response(ResponseType.SUCCEED, "상품 검색 성공");			
 			
@@ -38,7 +40,7 @@ public class ProductTask {
 		try {
 			// SQL에 검색
 			ProductManager pm = new ProductManager();
-			ArrayList<Product> searchResult = pm.searchByCategory(category);
+			ArrayList<Product> searchResult = pm.searchByCategory(category, SELECT_LIMIT);
 			
 			response = new Response(ResponseType.SUCCEED, "상품 검색 성공");			
 			

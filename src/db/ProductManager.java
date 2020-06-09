@@ -10,6 +10,10 @@ public class ProductManager extends DBManager {
 	
 	// 문자열이 포함된 상품명을 가진 상품정보의 목록을 가져온다.
 	public ArrayList<Product> searchByProductName(String str) throws Exception {
+		return searchByProductName(str, 0);
+	}
+	
+	public ArrayList<Product> searchByProductName(String str, int limit) throws Exception {
 		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
 		ArrayList<String> tableColumns = getTableColumnsAll();
 		
@@ -21,6 +25,10 @@ public class ProductManager extends DBManager {
 				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_PRODUCT.toString() + "` WHERE `" +
 				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString() + "` LIKE '%" + searchStr + "%'";
 		
+		if(limit > 0) {
+			query += " LIMIT " + limit;
+		}
+		
 		// 쿼리
 		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
 		
@@ -30,6 +38,10 @@ public class ProductManager extends DBManager {
 	
 	// 해당 카테고리에 속하는 상품 다 가져옴
 	public ArrayList<Product> searchByCategory(Category category) throws Exception {
+		return searchByCategory(category, 0);
+	}
+	
+	public ArrayList<Product> searchByCategory(Category category, int limit) throws Exception {
 		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
 		ArrayList<String> tableColumns = getTableColumnsAll();
 		
@@ -37,6 +49,10 @@ public class ProductManager extends DBManager {
 		String query = "SELECT * FROM `" +
 				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_PRODUCT.toString() + "` WHERE `" +
 				DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString() + "` = '" + category.getId() + "'";
+		
+		if(limit > 0) {
+			query += " LIMIT " + limit;
+		}
 		
 		// 쿼리
 		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
@@ -67,7 +83,7 @@ public class ProductManager extends DBManager {
 		return result.size() > 0 ? result : null;
 	}
 	@Override
-	protected ArrayList<String> modelToStringArray(Object object) {
+	protected ArrayList<String> getValuesFromObject(Object object) {
 		Product product = (Product) object;
 		return new ArrayList<>(Arrays.asList(
 				product.getName(), 

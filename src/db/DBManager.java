@@ -28,7 +28,7 @@ public abstract class DBManager {
 		ArrayList<String> columns = getTableColumnsAll();
 		
 		// 계정정보 테이블에 추가할 데이터 정보 배열 생성
-		ArrayList<String> values = modelToStringArray(object);
+		ArrayList<String> values = getValuesFromObject(object);
 		
 		// 쿼리
 		int cnt = DBConnector.getInstance().insert(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
@@ -72,7 +72,7 @@ public abstract class DBManager {
 	protected abstract ArrayList<String> getTableColumnsAll();									// 해당 테이블의 모든 열 이름을 가져온다.
 	protected abstract String getSelectQueryByKeys(ArrayList<String> keyValues);				// 테이블 조회를 위한 쿼리 문자열 만들어 가져온다.
 	protected abstract ArrayList<?> getModelList(ArrayList<ArrayList<String>> received);	// 테이블 조회 결과 문자열 배열을 알맞은 객체 배열로 만들어 가져온다.
-	protected abstract ArrayList<String> modelToStringArray(Object object); 					// 객체를 알맞게 String 배열로 변환하여 가져온다.
+	protected abstract ArrayList<String> getValuesFromObject(Object object); 					// 객체를 알맞게 String 배열로 변환하여 가져온다.
 	protected abstract String getTableName();													// 클래스 알맞은 테이블명 반환.
 	protected abstract ArrayList<String> getKeyValuesFromObject(Object object);					// 클래스에서 키값만 반환
 	

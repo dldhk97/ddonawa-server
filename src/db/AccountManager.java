@@ -50,7 +50,7 @@ public class AccountManager extends DBManager{
 		return result.size() > 0 ? result : null;
 	}
 	@Override
-	protected ArrayList<String> modelToStringArray(Object object){
+	protected ArrayList<String> getValuesFromObject(Object object){
 		Account account = (Account)object;
 		return new ArrayList<>(Arrays.asList(
 				account.getId(), 

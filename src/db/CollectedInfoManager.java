@@ -164,7 +164,7 @@ public class CollectedInfoManager extends DBManager {
 		return result.size() > 0 ? result : null;
 	}
 	@Override
-	protected ArrayList<String> modelToStringArray(Object object){
+	protected ArrayList<String> getValuesFromObject(Object object){
 		CollectedInfo collectedInfo = (CollectedInfo)object;
 		return new ArrayList<>(Arrays.asList(
 				collectedInfo.getProductName(), 

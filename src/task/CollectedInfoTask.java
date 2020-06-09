@@ -170,11 +170,7 @@ public class CollectedInfoTask {
 			double similarPercentage = 100 - (similarPoint * 100 / productName.length());
 			if(similarPercentage < MIN_SIMILAR_PERCENTAGE) {
 				it.remove();
-//				IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + "의 유사도 : " + similarPercentage + "% => 유사도 탈락");
 			}
-//			else {
-//				IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + "의 유사도 : " + similarPercentage + "%");
-//			}
 			
 		}
 	}

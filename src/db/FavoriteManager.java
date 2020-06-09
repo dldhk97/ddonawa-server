@@ -51,7 +51,7 @@ public class FavoriteManager extends DBManager {
 	}
 
 	@Override
-	protected ArrayList<String> modelToStringArray(Object object) {
+	protected ArrayList<String> getValuesFromObject(Object object) {
 		Favorite favorite = (Favorite) object;
 		return new ArrayList<>(Arrays.asList(
 				favorite.getAccountId(), 
