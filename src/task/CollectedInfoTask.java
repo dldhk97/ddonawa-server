@@ -26,30 +26,50 @@ public class CollectedInfoTask {
 			// 디버깅용 시간측정
 			long debugStartTime = System.currentTimeMillis();
 			
-			// 다나와 파싱
+			// 다나와 & 네이버 파싱
 			ArrayList<CollectedInfo> received = ParserManager.getInstance().requestParse(product);
 			
-			// 정확한 수집정보 선정을 위한 유사도 필터링
-			received = filtering(product, received);
-			
-			// 목록 중 가장 저렴한 수집정보 선정
-			CollectedInfo mostInexpensiveInfo = getMostInexpensive(received);
-			
-			if(mostInexpensiveInfo != null) {
-//				IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
-//				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
+			if(received == null) {
+				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 파싱 실패");
+				response = new Response(ResponseType.FAILED, "서버에서 수집 정보 파싱에 실패했습니다.");
+			}
+			else {
+				// 정확한 수집정보 선정을 위한 유사도 필터링
+				ArrayList<CollectedInfo> filtered = filtering(product, received);
 				
-				// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
-				mostInexpensiveInfo.setProductName(product.getName());
-				CollectedInfoManager cim = new CollectedInfoManager();
-				isUpdated = cim.upsert(mostInexpensiveInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
-				if(isUpdated) {
-					response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트 성공!");
+				if(filtered == null) {
+					IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 동일한 제품을 찾는데 실패했습니다!");
+					response = new Response(ResponseType.SUCCEED, "동일한 제품을 찾는데 실패했습니다!");
 				}
 				else {
-					// 실패한건 아니고 업데이트가 안이루어진거임. 가격 경쟁 패배해서.
-					response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
+					// 목록 중 가장 저렴한 수집정보 선정
+					CollectedInfo mostInexpensiveInfo = getMostInexpensive(filtered);
+					
+					if(mostInexpensiveInfo != null) {
+//						IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
+//						IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
+						
+						// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
+						mostInexpensiveInfo.setProductName(product.getName());
+						CollectedInfoManager cim = new CollectedInfoManager();
+						isUpdated = cim.upsert(mostInexpensiveInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
+						if(isUpdated) {
+							IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 업데이트 성공!");
+							response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트 성공!");
+						}
+						else {
+							// 실패한건 아니고 업데이트가 안이루어진거임. 가격 경쟁 패배해서.
+							IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 업데이트 수행되지 않음");
+							response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
+						}
+					}
+					else {
+						IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집정보 업데이트 수행되지 않음!");
+						response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
+					}
 				}
+				
+				
 			}
 			
 			// 디버깅용 처리시간 표시

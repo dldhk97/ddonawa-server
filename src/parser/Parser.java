@@ -26,7 +26,8 @@ public abstract class Parser {
 			String encoded = toUTF8(searchStr);
 			
 			// 셀레니움으로 크롤링
-			orgHtml = sm.explicitCrawl(getBaseUrl() + encoded, getExplicitClassName());
+			String targetUrl = getBaseUrl() + encoded;
+			orgHtml = sm.explicitCrawl(targetUrl, getExplicitClassName());
 			
 			// 필요한 정보 빼내기
 			return parseProduct(orgHtml);

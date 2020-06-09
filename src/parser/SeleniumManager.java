@@ -20,7 +20,7 @@ public class SeleniumManager {
 	public final String WEB_DRIVER_ID = "webdriver.chrome.driver";
 	public final String WEB_DRIVER_PATH = ".\\\\driver\\\\chromedriver_83.0.4103.39_win32.exe";
 	
-	private final int TIMEOUT_CRWAL = 3;
+	private final int TIMEOUT_CRWAL = 5;		// 크롤링 5초 안에 안되면 ABORT
 	
 	private WebDriver driver;
 
