@@ -3,6 +3,7 @@ package db;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import model.Category;
 import model.Product;
 
 public class ProductManager extends DBManager {
@@ -19,6 +20,23 @@ public class ProductManager extends DBManager {
 		String query = "SELECT * FROM `" +
 				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_PRODUCT.toString() + "` WHERE `" +
 				DBInfo.TABLE_PRODUCT_COLUMN_NAME.toString() + "` LIKE '%" + searchStr + "%'";
+		
+		// 쿼리
+		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
+		
+		// 2차원 문자열 배열을 1차원 Product 배열로 변환 후 반환
+		return getModelList(received);
+	}
+	
+	// 해당 카테고리에 속하는 상품 다 가져옴
+	public ArrayList<Product> searchByCategory(Category category) throws Exception {
+		// 상품정보 테이블에서 조회할 열 목록(이름, 품목정보_id)
+		ArrayList<String> tableColumns = getTableColumnsAll();
+		
+		// 쿼리 생성
+		String query = "SELECT * FROM `" +
+				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_PRODUCT.toString() + "` WHERE `" +
+				DBInfo.TABLE_PRODUCT_COLUMN_CATEGORYID.toString() + "` = '" + category.getId() + "'";
 		
 		// 쿼리
 		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);

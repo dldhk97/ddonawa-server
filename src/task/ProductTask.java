@@ -3,6 +3,7 @@ package task;
 import java.util.ArrayList;
 
 import db.ProductManager;
+import model.Category;
 import model.Product;
 import model.Tuple;
 import network.Response;
@@ -18,6 +19,26 @@ public class ProductTask {
 			// SQL에 검색
 			ProductManager pm = new ProductManager();
 			ArrayList<Product> searchResult = pm.searchByProductName(searchWord);
+			
+			response = new Response(ResponseType.SUCCEED, "상품 검색 성공");			
+			
+			// 결과 반환
+			return new Tuple<Response, ArrayList<Product>>(response, searchResult);
+		}
+		catch(Exception e) {
+			IOHandler.getInstance().log("ProductTask.search", e);
+			response = new Response(ResponseType.ERROR, "상품 검색 중 서버에서 오류가 발생했습니다.");
+		}
+		
+		return new Tuple<Response, ArrayList<Product>>(response, null);
+	}
+	
+	public Tuple<Response, ArrayList<Product>> searchByCategory(Category category) {
+		Response response = null;
+		try {
+			// SQL에 검색
+			ProductManager pm = new ProductManager();
+			ArrayList<Product> searchResult = pm.searchByCategory(category);
 			
 			response = new Response(ResponseType.SUCCEED, "상품 검색 성공");			
 			

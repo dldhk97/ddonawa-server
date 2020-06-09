@@ -133,6 +133,9 @@ public class ServerTask implements Runnable{
 				onGetProductDetail(receivedProtocol);
 				IOHandler.getInstance().log("[" + clientIP + "] 상세 정보 반환 완료");
 				break;
+			case SEARCH_BY_CATEGORY:
+				onSearchByCategory(receivedProtocol);
+				break;
 			default:
 				IOHandler.getInstance().log("[" + clientIP + "] 이벤트 타입을 모르겠어요");
 				break;
@@ -173,6 +176,45 @@ public class ServerTask implements Runnable{
 		
 		// 상품정보+최신수집정보를 포함시킨 프로토콜 생성
 		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.SEARCH, response, (Object)totalResult);
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	private void onSearchByCategory(Protocol receivedProtocol) throws Exception {
+		// 상품 작업 생성
+		ProductTask pt = new ProductTask();
+		
+		// 사용자에게서 받아온 카테고리 획득 후 검색
+		Category category = (Category) receivedProtocol.getObject();
+		Tuple<Response, ArrayList<Product>> productResult = pt.searchByCategory(category);
+		
+		// 상품정보 응답 및 검색결과 받아옴
+		Response response = productResult.getFirst();
+		ArrayList<Product> productList = productResult.getSecond();
+		
+		// 상품정보 - 최근가격정보가 쌍으로 이루어진 결과 배열 생성
+		ArrayList<Tuple<Product, CollectedInfo>> totalResult = new ArrayList<Tuple<Product,CollectedInfo>>();
+		
+		// 상품정보가 존재한다면 최근 가격도 가져온다.
+		if(productList != null && productList.size() > 0) {
+			CollectedInfoTask cit = new CollectedInfoTask();
+			// 상품정보 하나씩, 최근 가격 가져옴
+			for(Product p : productList) {
+				Tuple<Response, ArrayList<CollectedInfo>> collectedInfoResult = cit.findByProduct(p);
+				ArrayList<CollectedInfo> collectedInfoList = collectedInfoResult.getSecond();
+				
+				// 최근 가격 가져와서 최종 결과 배열에 추가.
+				if(collectedInfoList != null && collectedInfoList.size() > 0) {
+					CollectedInfo ci = collectedInfoList.get(0);
+					totalResult.add(new Tuple<Product, CollectedInfo>(p, ci));
+				}
+				
+			}
+		}
+		
+		// 상품정보+최신수집정보를 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.SEARCH_BY_CATEGORY, response, (Object)totalResult);
 		
 		// 결과를 전송함.
 		sendOutputStream(sendProtocol);
