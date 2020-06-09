@@ -111,10 +111,12 @@ public class CollectedInfoManager extends DBManager {
 					cnt = update(newInfo);
 				}
 				else {
-					// 이전 정보의 썸네일이 없으면 신규 썸네일을 복사해서 업데이트한다.
-					if(prevThumbnail == null ||prevThumbnail.isEmpty()) {
-						previousInfo.setThumbnail(newThumbnail);
-						cnt = update(previousInfo);
+					// 이전 정보의 썸네일이 없고 신규 썸넴일이 있으면 신규 썸네일을 복사해서 업데이트한다.
+					if(prevThumbnail == null || prevThumbnail.isEmpty()) {
+						if(newThumbnail != null && !newThumbnail.isEmpty()) {
+							previousInfo.setThumbnail(newThumbnail);
+							cnt = update(previousInfo);
+						}
 					}
 				}
 			}
