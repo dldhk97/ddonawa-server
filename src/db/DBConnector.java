@@ -111,10 +111,10 @@ public class DBConnector {
 		StringBuilder sb = new StringBuilder("DELETE FROM `" + dbName + "`.`" + tableName + "` WHERE ");
 		
 		for(int i = 0 ; i < columnNames.size() ; i++) {
-			sb.append("`" + columnNames.get(i) + "` = '" + values.get(i) + "', ");
+			sb.append("`" + columnNames.get(i) + "` = '" + values.get(i) + "' AND ");
 		}
 		if(columnNames.size() > 0) {
-			sb.delete(sb.length() - 2, sb.length());
+			sb.delete(sb.length() - 5, sb.length());
 		}
 		
 		String sql = sb.toString();
