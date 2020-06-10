@@ -12,26 +12,28 @@ import network.ResponseType;
 import utility.IOHandler;
 
 public class FavoriteTask {
-	public Response addFavorite(Favorite favorite) {
+	public Response addFavorite(Favorite favorite, boolean needEssentialCheck) {
 		try {
 			// 계정 존재하는지 체크
-			AccountTask at = new AccountTask();
-			ArrayList<Account> accountList = at.searchById(favorite.getAccountId());
-			
-			if(accountList == null) {
-				IOHandler.getInstance().log("찜 목록에 추가할 계정이 존재하지 않습니다.");
-				return new Response(ResponseType.FAILED, "찜 목록에 추가할 계정이 존재하지 않습니다.");
-			}
-			
-			// 상품정보 존재하는지 체크
-			ProductTask pt = new ProductTask();
-			Tuple<Response, ArrayList<Product>> result = pt.searchByProductName(favorite.getProductName());
-			
-			ArrayList<Product> searchResult = result.getSecond();
-			
-			if(searchResult == null) {
-				IOHandler.getInstance().log("찜 목록에 추가할 상품이 존재하지 않습니다.");
-				return new Response(ResponseType.FAILED, "찜 목록에 추가할 상품이 존재하지 않습니다.");
+			if(needEssentialCheck) {
+				AccountTask at = new AccountTask();
+				ArrayList<Account> accountList = at.searchById(favorite.getAccountId());
+				
+				if(accountList == null) {
+					IOHandler.getInstance().log("찜 목록에 추가할 계정이 존재하지 않습니다.");
+					return new Response(ResponseType.FAILED, "찜 목록에 추가할 계정이 존재하지 않습니다.");
+				}
+				
+				// 상품정보 존재하는지 체크
+				ProductTask pt = new ProductTask();
+				Tuple<Response, ArrayList<Product>> result = pt.searchByProductName(favorite.getProductName());
+				
+				ArrayList<Product> searchResult = result.getSecond();
+				
+				if(searchResult == null) {
+					IOHandler.getInstance().log("찜 목록에 추가할 상품이 존재하지 않습니다.");
+					return new Response(ResponseType.FAILED, "찜 목록에 추가할 상품이 존재하지 않습니다.");
+				}
 			}
 			
 			// 찜목록에 추가

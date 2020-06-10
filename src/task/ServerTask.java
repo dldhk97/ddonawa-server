@@ -146,6 +146,7 @@ public class ServerTask implements Runnable{
 				onGetFavorite(receivedProtocol);
 				break;
 			case REQUEST_FAVORITE_CHECK:
+				onRequestFavoriteCheck(receivedProtocol);
 				break;
 			default:
 				onUnknown(receivedProtocol);
@@ -307,7 +308,7 @@ public class ServerTask implements Runnable{
 		
 		// 사용자에게서 찜 받음. 그걸로 추가시도
 		Favorite favorite = (Favorite) receivedProtocol.getObject();
-		Response response = ft.addFavorite(favorite);
+		Response response = ft.addFavorite(favorite, false);
 		
 		// 분류 목록 포함시킨 프로토콜 생성
 		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.ADD_FAVORITE, response, null); 
@@ -348,6 +349,26 @@ public class ServerTask implements Runnable{
 		
 		// 결과를 전송함.
 		sendOutputStream(sendProtocol);
+	}
+	
+	// 주기적 파싱해서 체크해서 돌려줌.
+	private void onRequestFavoriteCheck(Protocol receivedProtocol) throws Exception{
+		// 찜 작업 생성
+		FavoriteTask ft = new FavoriteTask();
+		
+		// 사용자에게서 계정정보 받음
+//		Account account = (Account) receivedProtocol.getObject();
+//		Tuple<Response, ArrayList<Favorite>> result = ft.findByAccount(account);
+//		
+//		// 응답과, 분류 분리
+//		Response response = result.getFirst();
+//		ArrayList<Favorite> favoriteList = result.getSecond();
+//		
+//		// 분류 목록 포함시킨 프로토콜 생성
+//		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.REQUEST_FAVORITE_CHECK, response, favoriteList); 
+		
+//		 결과를 전송함.
+//		sendOutputStream(sendProtocol);
 	}
 	
 	private void onUnknown(Protocol receivedProtocol) {

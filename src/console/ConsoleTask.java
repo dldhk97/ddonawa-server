@@ -162,7 +162,7 @@ public class ConsoleTask {
 		
 		FavoriteTask ft = new FavoriteTask();
 		Favorite f = new Favorite(account.getId(), product.getName(), targetPrice);
-		ft.addFavorite(f);
+		ft.addFavorite(f, true);
 		
 	}
 	
