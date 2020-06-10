@@ -168,6 +168,17 @@ public class ServerTask implements Runnable{
 		ArrayList<Product> productList = productResult.getSecond();
 		
 		// 상품정보 - 최근가격정보가 쌍으로 이루어진 결과 배열 생성
+		ArrayList<Tuple<Product, CollectedInfo>> totalResult = getRecentProductTupleList(productList);
+		
+		// 상품정보+최신수집정보를 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.SEARCH, response, (Object)totalResult);
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	// 상품정보 - 최근가격정보가 쌍으로 이루어진 배열 생성
+	private ArrayList<Tuple<Product, CollectedInfo>> getRecentProductTupleList(ArrayList<Product> productList){
 		ArrayList<Tuple<Product, CollectedInfo>> totalResult = new ArrayList<Tuple<Product,CollectedInfo>>();
 		
 		// 상품정보가 존재한다면 최근 가격도 가져온다.
@@ -187,11 +198,7 @@ public class ServerTask implements Runnable{
 			}
 		}
 		
-		// 상품정보+최신수집정보를 포함시킨 프로토콜 생성
-		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.SEARCH, response, (Object)totalResult);
-		
-		// 결과를 전송함.
-		sendOutputStream(sendProtocol);
+		return totalResult.size() > 0 ? totalResult : null;
 	}
 	
 	private void onSearchByCategory(Protocol receivedProtocol) throws Exception {
@@ -351,24 +358,89 @@ public class ServerTask implements Runnable{
 		sendOutputStream(sendProtocol);
 	}
 	
-	// 주기적 파싱해서 체크해서 돌려줌.
+	// 주기적 파싱해서 체크해서 돌려줌. 사용자에게서 Account를 받아 ArrayList<Product>를 돌려줌
 	private void onRequestFavoriteCheck(Protocol receivedProtocol) throws Exception{
 		// 찜 작업 생성
 		FavoriteTask ft = new FavoriteTask();
 		
 		// 사용자에게서 계정정보 받음
-//		Account account = (Account) receivedProtocol.getObject();
-//		Tuple<Response, ArrayList<Favorite>> result = ft.findByAccount(account);
-//		
-//		// 응답과, 분류 분리
-//		Response response = result.getFirst();
-//		ArrayList<Favorite> favoriteList = result.getSecond();
-//		
-//		// 분류 목록 포함시킨 프로토콜 생성
-//		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.REQUEST_FAVORITE_CHECK, response, favoriteList); 
+		Account account = (Account) receivedProtocol.getObject();
+		Tuple<Response, ArrayList<Favorite>> favoriteResponse = ft.findByAccount(account);
 		
-//		 결과를 전송함.
-//		sendOutputStream(sendProtocol);
+		// 응답과, 분류 분리
+		Response response = favoriteResponse.getFirst();
+		final ArrayList<Favorite> favoriteList = favoriteResponse.getSecond();
+		
+		// 계정정보를 찾았으면
+		ArrayList<CollectedInfo> result = null;
+		if(response.getResponseType() == ResponseType.SUCCEED) {
+			// 그 계정의 찜목록이 존재한다면
+			if(favoriteList != null && favoriteList.size() > 0) {
+				result = getCheaperFavoriteOnly(favoriteList);
+				if(result != null) {
+					IOHandler.getInstance().log("[찜목록 비교 요청] 비교에 성공했습니다.");
+					response = new Response(ResponseType.SUCCEED, "찜목록 비교 요청 : 비교에 성공했습니다.");
+				}
+				else {
+					IOHandler.getInstance().log("[찜목록 비교 요청] 비교에 실패했거나 결과가 없습니다.");
+					response = new Response(ResponseType.SUCCEED, "찜목록 비교 요청 : 비교에 실패했거나 결과가 없습니다.");
+				}
+			}
+			else {
+				IOHandler.getInstance().log("[찜목록 비교 요청] 해당 사용자의 찜목록이 없습니다.");
+				response = new Response(ResponseType.SUCCEED, "찜목록 비교 요청 : 해당 사용자의 찜목록이 없습니다.");
+			}
+		}	
+		else {
+			IOHandler.getInstance().log("[찜목록 비교 요청] 해당 사용자의 계정정보를 찾을 수 없습니다.");
+			response = new Response(ResponseType.FAILED, "찜목록 비교 요청 : 해당 사용자의 계정정보를 찾을 수 없습니다.");
+		}
+		
+		// 분류 목록 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.REQUEST_FAVORITE_CHECK, response, result); 
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	// getCheaperFavoriteOnly
+	private ArrayList<CollectedInfo> getCheaperFavoriteOnly(ArrayList<Favorite> favoriteList){
+		ArrayList<Product> productList = new ArrayList<Product>();
+		
+		// 찜목록 탐색
+		for(Favorite f : favoriteList) {
+			// 해당 상품을 찾는다.
+			ProductTask pt = new ProductTask();
+			Product p = pt.getProductByName(f.getProductName());
+			if(p != null) {
+				// 파싱 대상 목록에 넣음
+				productList.add(p);
+			}
+		}
+		// 파싱 대상 상품 목록이 존재하면
+		if(productList.size() > 0) {
+			// 해당 상품들의 가장 최신 정보를 가져온다.
+			ArrayList<Tuple<Product, CollectedInfo>> recent = getRecentProductTupleList(productList);
+			ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
+			
+			// 상품들의 최신 목록 탐색
+			if(recent != null) {
+				for(Tuple<Product, CollectedInfo> t : recent) {
+					for(Favorite f : favoriteList) {
+						// 찜 목록에 있는 상품과 이름이 같으면, 가격 비교
+						if(f.getProductName().equals(t.getFirst().getName())) {
+							// 가격이 더 낮을때는, 결과 목록에 포함.
+							if(f.getTargetPrice() > t.getSecond().getPrice()) {
+								result.add(t.getSecond());
+							}
+							break;
+						}
+					}
+				}
+				return result.size() > 0 ? result : null;
+			}
+		}
+		return null;
 	}
 	
 	private void onUnknown(Protocol receivedProtocol) {

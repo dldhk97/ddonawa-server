@@ -1,6 +1,7 @@
 package task;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import db.ProductManager;
 import model.Category;
@@ -53,6 +54,22 @@ public class ProductTask {
 		}
 		
 		return new Tuple<Response, ArrayList<Product>>(response, null);
+	}
+	
+	public Product getProductByName(String productName){
+		try {
+			ProductManager pm = new ProductManager();
+			ArrayList<String> values = new ArrayList<>(Arrays.asList(
+					productName
+					));
+			Product result = (Product)pm.findByKey(values);
+			return result;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	

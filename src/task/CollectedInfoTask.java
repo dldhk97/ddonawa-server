@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import db.CollectedInfoManager;
 import model.CollectedInfo;
+import model.Favorite;
 import model.Product;
 import model.Tuple;
 import network.Response;

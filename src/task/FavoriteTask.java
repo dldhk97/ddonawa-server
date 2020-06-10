@@ -87,10 +87,15 @@ public class FavoriteTask {
 			FavoriteManager fm = new FavoriteManager();
 			ArrayList<Favorite> favoriteList = fm.findByAccountId(account.getId());
 			
+			if(favoriteList != null && favoriteList.size() < 0) {
+				response = new Response(ResponseType.SUCCEED, "찜 조회에 성공했습니다.");
+			}
+			else {
+				response = new Response(ResponseType.SUCCEED, "찜 목록이 비어있습니다.");
+			}
+			
 			// 결과 반환
-			response = new Response(ResponseType.SUCCEED, "찜 조회에 성공했습니다."); 
-			Tuple<Response, ArrayList<Favorite>> result = new Tuple<Response, ArrayList<Favorite>>(response, favoriteList);
-			return result;
+			return new Tuple<Response, ArrayList<Favorite>>(response, favoriteList);
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("FavoriteTask.findByAccount", e);
