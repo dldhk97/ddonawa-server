@@ -73,4 +73,12 @@ public class FavoriteManager extends DBManager {
 				));
 	}
 
+	@Override
+	protected ArrayList<String> getKeyColumns() {
+		return new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_FAVORITE_COLUMN_ACCOUNTID.toString(), 
+				DBInfo.TABLE_FAVORITE_COLUMN_PRODUCTNAME.toString()
+				));
+	}
+
 }

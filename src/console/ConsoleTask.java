@@ -158,10 +158,11 @@ public class ConsoleTask {
 		Product product = (Product) selectObject(productList);
 		
 		// 사용자에게 목표금액을 물어본다.
-		int targetPrice = IOHandler.getInstance().getIntByUser("[SYSTEM]목표 금액을 설정해주세요.");
+		double targetPrice = IOHandler.getInstance().getIntByUser("[SYSTEM]목표 금액을 설정해주세요.");
 		
 		FavoriteTask ft = new FavoriteTask();
-		ft.addFavorite(account, product, targetPrice);
+		Favorite f = new Favorite(account.getId(), product.getName(), targetPrice);
+		ft.addFavorite(f);
 		
 	}
 	

@@ -95,6 +95,35 @@ public class DBConnector {
 		return state.executeUpdate(sql);
 	}
 	
+	public int delete(String dbName, String tableName, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
+		if(columnNames.size() != values.size()) {
+			throw new Exception("SQL INSERT FAILED:Diff size between columnNames and values");
+		}
+		
+		// 따옴표 처리 ex)[리바이스] LEVI'S 511 슬림핏 청바지_블루(04511-3231)
+		for(int i = 0 ; i < values.size() ; i++) {
+			String value = values.get(i);
+			if(value != null)
+				values.set(i, value.replace("'", "''"));
+		}
+		
+		// SQL문 작성
+		StringBuilder sb = new StringBuilder("DELETE FROM `" + dbName + "`.`" + tableName + "` WHERE ");
+		
+		for(int i = 0 ; i < columnNames.size() ; i++) {
+			sb.append("`" + columnNames.get(i) + "` = '" + values.get(i) + "', ");
+		}
+		if(columnNames.size() > 0) {
+			sb.delete(sb.length() - 2, sb.length());
+		}
+		
+		String sql = sb.toString();
+		IOHandler.getInstance().log("[DEBUG] DELETE SQL : " + sql);
+		
+		// SQL문 실행
+		return state.executeUpdate(sql);
+	}
+	
 	// 키 속성, 키 값이 일치하는 항목의 속성, 값을 변경함
 	public int update(String dbName, String tableName,  ArrayList<String> keyColumnNames, ArrayList<String> keyValues, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
 		if(keyColumnNames.size() != keyValues.size()) {

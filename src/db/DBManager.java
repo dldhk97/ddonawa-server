@@ -33,12 +33,18 @@ public abstract class DBManager {
 		// 쿼리
 		int cnt = DBConnector.getInstance().insert(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
 		
-//		if(cnt > 0) {
-//			IOHandler.getInstance().log(getTableName() + " DB에 추가 성공");
-//		}
-//		else {
-//			IOHandler.getInstance().log(getTableName() + " DB에 추가 실패");
-//		}
+		return cnt;
+	}
+	
+	public int delete(Object object) throws Exception {
+		// 테이블에서 삭제할 열 정보 배열 생성
+		ArrayList<String> columns = getKeyColumns();
+		
+		// 테이블에서 삭제할 데이터 정보 배열 생성
+		ArrayList<String> values = getKeyValuesFromObject(object);
+		
+		// 쿼리
+		int cnt = DBConnector.getInstance().delete(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
 		
 		return cnt;
 	}
@@ -70,6 +76,7 @@ public abstract class DBManager {
 	
 	
 	protected abstract ArrayList<String> getTableColumnsAll();									// 해당 테이블의 모든 열 이름을 가져온다.
+	protected abstract ArrayList<String> getKeyColumns();										// 키 컬럼만 가져온다.
 	protected abstract String getSelectQueryByKeys(ArrayList<String> keyValues);				// 테이블 조회를 위한 쿼리 문자열 만들어 가져온다.
 	protected abstract ArrayList<?> getModelList(ArrayList<ArrayList<String>> received);	// 테이블 조회 결과 문자열 배열을 알맞은 객체 배열로 만들어 가져온다.
 	protected abstract ArrayList<String> getValuesFromObject(Object object); 					// 객체를 알맞게 String 배열로 변환하여 가져온다.

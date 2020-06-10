@@ -47,4 +47,10 @@ public class BigCategoryManager extends DBManager{
 				bigCategory.getId()
 				));
 	}
+	@Override
+	protected ArrayList<String> getKeyColumns() {
+		return new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_BIGCATEGORY_COLUMN_ID.toString()
+				));
+	}
 }

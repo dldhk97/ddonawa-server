@@ -188,4 +188,12 @@ public class CollectedInfoManager extends DBManager {
 				collectedInfo.getCollectedDate().toString()
 				));
 	}
+
+	@Override
+	protected ArrayList<String> getKeyColumns() {
+		return new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_PRODUCTNAME.toString(), 
+				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString()
+				));
+	}
 }

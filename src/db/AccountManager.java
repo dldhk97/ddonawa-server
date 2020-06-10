@@ -69,4 +69,11 @@ public class AccountManager extends DBManager{
 				));
 	}
 
+	@Override
+	protected ArrayList<String> getKeyColumns() {
+		return new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_ACCOUNT_COLUMN_ID.toString()
+				));
+	}
+
 }

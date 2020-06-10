@@ -65,4 +65,11 @@ public class CategoryManager extends DBManager{
 				category.getId() 
 				));
 	}
+
+	@Override
+	protected ArrayList<String> getKeyColumns() {
+		return new ArrayList<>(Arrays.asList(
+				DBInfo.TABLE_CATEGORY_COLUMN_ID.toString()
+				));
+	}
 }

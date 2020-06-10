@@ -11,6 +11,7 @@ import model.Account;
 import model.BigCategory;
 import model.Category;
 import model.CollectedInfo;
+import model.Favorite;
 import model.Product;
 import model.Tuple;
 import network.Direction;
@@ -52,9 +53,8 @@ public class ServerTask implements Runnable{
 				case EVENT:
 					onEvent(receivedProtocol);
 					break;
-				case ERROR:
-					break;
 				default :
+					onUnknown(receivedProtocol);
 					break;
 			}
 			
@@ -136,7 +136,19 @@ public class ServerTask implements Runnable{
 			case SEARCH_BY_CATEGORY:
 				onSearchByCategory(receivedProtocol);
 				break;
+			case ADD_FAVORITE:
+				onAddFavorite(receivedProtocol);
+				break;
+			case DELETE_FAVORITE:
+				onDeleteFavorite(receivedProtocol);
+				break;
+			case GET_FAVORITE:
+				onGetFavorite(receivedProtocol);
+				break;
+			case REQUEST_FAVORITE_CHECK:
+				break;
 			default:
+				onUnknown(receivedProtocol);
 				IOHandler.getInstance().log("[" + clientIP + "] 이벤트 타입을 모르겠어요");
 				break;
 		}
@@ -287,6 +299,76 @@ public class ServerTask implements Runnable{
 		
 		// 결과를 전송함.
 		sendOutputStream(sendProtocol);
+	}
+	
+	private void onAddFavorite(Protocol receivedProtocol) throws Exception {
+		// 찜 작업 생성
+		FavoriteTask ft = new FavoriteTask();
+		
+		// 사용자에게서 찜 받음. 그걸로 추가시도
+		Favorite favorite = (Favorite) receivedProtocol.getObject();
+		Response response = ft.addFavorite(favorite);
+		
+		// 분류 목록 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.ADD_FAVORITE, response, null); 
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	private void onDeleteFavorite(Protocol receivedProtocol) throws Exception {
+		// 찜 작업 생성
+		FavoriteTask ft = new FavoriteTask();
+		
+		// 사용자에게서 찜 받음. 그걸로 삭제시도
+		Favorite favorite = (Favorite) receivedProtocol.getObject();
+		Response response = ft.deleteFavorite(favorite);
+		
+		// 분류 목록 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.DELETE_FAVORITE, response, null); 
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	private void onGetFavorite(Protocol receivedProtocol) throws Exception {
+		// 찜 작업 생성
+		FavoriteTask ft = new FavoriteTask();
+		
+		// 사용자에게서 계정정보 받음
+		Account account = (Account) receivedProtocol.getObject();
+		Tuple<Response, ArrayList<Favorite>> result = ft.findByAccount(account);
+		
+		// 응답과, 분류 분리
+		Response response = result.getFirst();
+		ArrayList<Favorite> favoriteList = result.getSecond();
+		
+		// 분류 목록 포함시킨 프로토콜 생성
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, EventType.GET_FAVORITE, response, favoriteList); 
+		
+		// 결과를 전송함.
+		sendOutputStream(sendProtocol);
+	}
+	
+	private void onUnknown(Protocol receivedProtocol) {
+		try {
+			IOHandler.getInstance().log("[SYSTEM] CODE 1031");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		// 사용자에게서 받아온 계정 정보 획득 후 회원가입 시도
+		Response response = new Response(ResponseType.UNKNOWN, "서버에서 알 수 없는 오류가 발생하였습니다 : CODE 1031");
+		Protocol sendProtocol = new Protocol(ProtocolType.EVENT, Direction.TO_CLIENT, response, null);
+		
+		// 결과를 전송함.
+		try {
+			sendOutputStream(sendProtocol);
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
