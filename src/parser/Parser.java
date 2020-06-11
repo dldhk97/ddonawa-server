@@ -97,6 +97,7 @@ public abstract class Parser {
 		return result;
 	}
 	
+	// 네이버 전용
 	private ArrayList<CollectedInfo> parseProductByJSP(Document doc) {
 		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
 		Elements elems = doc.select("#__NEXT_DATA__");
@@ -123,6 +124,9 @@ public abstract class Parser {
 				 double price = Double.parseDouble(priceStr);				// 가격 추출
 				 String thumbnail = (String) obj.get("imageUrl");
 				 String url = (String) obj.get("mallProductUrl");
+				 if(url == null) {
+					 url = (String) obj.get("crUrl");
+				 }
 				 
 				 Date date = new Date(Calendar.getInstance().getTime().getTime());		// 오늘 날짜
 				 result.add(new CollectedInfo(productName,date,price, url, 0, thumbnail));

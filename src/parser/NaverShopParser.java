@@ -7,7 +7,7 @@ public class NaverShopParser extends Parser{
 	
 	private static final String BASE_URL = "https://search.shopping.naver.com/search/all?query=";
 	private static final String PRODUCT_CLASS = "basicList_item__2XT81";							// 파싱한 HTML에서 상품을 특정하는 클래스명. <div class="prod_main_info">이면 child노드들을 하나의 상품으로 보겠다는 의미.
-	private static final String EXPLICIT_CLASS = "basicList_info_area__17Xyo";							// 해당 클래스가 로딩될 때 까지 파싱을 하지 않음
+	private static final String EXPLICIT_CLASS = "__NEXT_DATA__";							// 해당 클래스가 로딩될 때 까지 파싱을 하지 않음
 	private static final String LOW_ACCURACY_CLASS = "right_word partial";					// 검색 결과가 모자랄 때 나오는 메소드
     
     @Override
