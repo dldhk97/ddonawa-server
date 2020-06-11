@@ -116,6 +116,7 @@ public class CollectedInfoManager extends DBManager {
 						if(newThumbnail != null && !newThumbnail.isEmpty()) {
 							previousInfo.setThumbnail(newThumbnail);
 							cnt = update(previousInfo);
+							IOHandler.getInstance().log("[SYSTEM] 썸네일 업데이트됨");
 						}
 					}
 				}

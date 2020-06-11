@@ -98,5 +98,10 @@ public class DanawaParser extends Parser {
     protected int getTimeout() {
     	return TIMEOUT;
     }
+    
+    @Override
+    protected boolean isNaverShopping() {
+    	return false;
+    }
 
 }

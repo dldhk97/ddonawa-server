@@ -49,7 +49,6 @@ public class SeleniumManager {
         WebDriverWait wait = new WebDriverWait(driver, timeout);
         driver.get(url);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className(className)));
-      
 		String result = driver.getPageSource();
 		return result;
 	}

@@ -1,12 +1,8 @@
 package parser;
 
-import java.util.ArrayList;
-
-import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import model.CollectedInfo;
 public class NaverShopParser extends Parser{
 	
 	private static final String BASE_URL = "https://search.shopping.naver.com/search/all?query=";
@@ -45,6 +41,7 @@ public class NaverShopParser extends Parser{
 		return null;
 	}
 	
+    // 네이버 섬네일 없으면 만들어내야댐
     @Override
 	protected String getThumbnailUrl(Element productHtml) {
 		Elements thumbnailElems = productHtml.getElementsByClass("thumbnail_thumb__3Agq6");
@@ -54,8 +51,27 @@ public class NaverShopParser extends Parser{
 				return imgElems.get(0).attr("src");
 			};
 		}
-		return null;
+		return createThumbnailUrl(productHtml);
 	}
+    
+    private String createThumbnailUrl(Element productHtml) {
+    	String href = getHref(productHtml);
+    	if(href == null) {
+    		return null;
+    	}
+    	try {
+    		String splited1 = href.split("nvMid=")[1];
+        	String nvMid = splited1.split("&")[0];
+        	String head = nvMid.substring(0, 7);
+        	String url = "https://shopping-phinf.pstatic.net/main_" + head + "/" + nvMid +".1.jpg?type=f140" ;
+        	return url;
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+		}
+    	
+    	return null;
+    }
 	
     @Override
 	protected String getProductName(Element productHtml) {
@@ -87,5 +103,10 @@ public class NaverShopParser extends Parser{
     @Override
     protected int getTimeout() {
     	return TIMEOUT;
+    }
+    
+    @Override
+    protected boolean isNaverShopping() {
+    	return true;
     }
 }
