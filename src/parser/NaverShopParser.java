@@ -1,7 +1,18 @@
 package parser;
 
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Calendar;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
+
+import model.CollectedInfo;
 
 public class NaverShopParser extends Parser{
 	
@@ -11,6 +22,68 @@ public class NaverShopParser extends Parser{
 	private static final String LOW_ACCURACY_CLASS = "right_word partial";					// 검색 결과가 모자랄 때 나오는 메소드
 	private static final int TIMEOUT = 8;
     
+	// 네이버 전용
+	private static final double MIN_SIMILIARITY = 0.4;
+	
+	@Override
+	protected ArrayList<CollectedInfo> parseProduct(Document doc) {
+		// 검색 정확도가 낮은지 체크한다. (네이버쇼핑만 체크함. 다나와는 부정확하면 아예 안뜬다)
+		Elements lowAccuracyCheck = doc.getElementsByClass(getLowAccuracyClassName());
+		if(lowAccuracyCheck.size() > 0) {
+    		return null;
+    	}
+		
+		ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
+		Elements elems = doc.select("#__NEXT_DATA__");
+		Element temp =  elems.get(0);
+		Node b = temp.childNode(0);
+		String json = b.toString();
+		
+		try {
+			 JSONParser jsonParser = new JSONParser();
+			 JSONObject jsonObj = (JSONObject) jsonParser.parse(json);
+			 JSONObject t1 = (JSONObject) jsonObj.get("props");
+			 JSONObject t2 = (JSONObject) t1.get("pageProps");
+			 JSONObject t3 = (JSONObject) t2.get("initialState");
+			 JSONObject t4 = (JSONObject) t3.get("products");
+			 JSONArray t5 = (JSONArray) t4.get("list");
+			 
+			 for(int i = 0 ; i < t5.size() ; i++){
+				 JSONObject t6 = (JSONObject) t5.get(i);
+				 JSONObject obj = (JSONObject) t6.get("item");
+				 
+				 // 유사도 0.4 미만이면 안넣음.
+				 String similarityStr = (String) obj.get("similarity");
+				 double similarity = Double.parseDouble(similarityStr);
+				 if(similarity < MIN_SIMILIARITY) {
+					 continue;
+				 }
+				 
+				 String productName = (String) obj.get("productName");
+				 
+				 String priceStr = (String) obj.get("price");
+				 priceStr = priceStr.replaceAll("[^0-9]", "");		// 문자열에서 숫자만 추출;
+				 double price = Double.parseDouble(priceStr);				// 가격 추출
+				 String thumbnail = (String) obj.get("imageUrl");
+				 String url = (String) obj.get("mallProductUrl");
+				 if(url == null) {
+					 url = (String) obj.get("crUrl");
+				 }
+				 
+				 Date date = new Date(Calendar.getInstance().getTime().getTime());		// 오늘 날짜
+				 result.add(new CollectedInfo(productName,date,price, url, 0, thumbnail));
+			 }
+			 return result;
+		 } 
+		catch (Exception e) {
+			 e.printStackTrace();
+		 }
+		
+		return null;
+	}
+	
+	// ------------------------------------------------------------
+	
     @Override
     protected String getBaseUrl() {
     	return BASE_URL;
@@ -93,20 +166,7 @@ public class NaverShopParser extends Parser{
 	}
     
     @Override
-    protected boolean isLowAccuracy(Elements elems) {
-    	if(elems.size() > 0) {
-    		return true;
-    	}
-    	return false;
-    }
-    
-    @Override
     protected int getTimeout() {
     	return TIMEOUT;
-    }
-    
-    @Override
-    protected boolean isNaverShopping() {
-    	return true;
     }
 }

@@ -1,7 +1,14 @@
 package parser;
 
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Calendar;
+
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import model.CollectedInfo;
 
 public class DanawaParser extends Parser {
 	
@@ -10,6 +17,31 @@ public class DanawaParser extends Parser {
     private static final String EXPLICIT_CLASS = "product_list";							// 해당 클래스가 로딩될 때 까지 파싱을 하지 않음
     private static final String LOW_ACCURACY_CLASS = "NONE";								// 검색 결과가 모자랄 때 나오는 메소드
     private static final int TIMEOUT = 5;
+
+	// jsoup 파싱 방식. 다나와는 이거씀.
+    @Override
+    protected ArrayList<CollectedInfo> parseProduct(Document doc){
+    	ArrayList<CollectedInfo> result = new ArrayList<CollectedInfo>();
+    	
+		// 클래스명으로 선택
+		Elements products = doc.getElementsByClass(getProductClassName());
+		if(products.size() > 0){
+			result = new ArrayList<CollectedInfo>();
+		}
+		
+		// 여러 항목 중 하나씩 탐색
+		for(Element p : products) {
+			String url = getHref(p);									// 하이퍼링크 추출
+			String thumbnail = getThumbnailUrl(p);						// 썸네일 URL 추출
+			String productName = getProductName(p);						// 상품명 추출
+			String priceStr = getPrice(p).replaceAll("[^0-9]", "");		// 문자열에서 숫자만 추출
+			double price = Double.parseDouble(priceStr);				// 가격 추출
+			Date date = new Date(Calendar.getInstance().getTime().getTime());		// 오늘 날짜
+			
+			result.add(new CollectedInfo(productName, date, price, url, 0, thumbnail));
+		}
+		return result;
+    }
     
     @Override
     protected String getBaseUrl() {
@@ -87,21 +119,10 @@ public class DanawaParser extends Parser {
 		}
 		return null;
     }
-	
-    // 다나와는 검색 결과가 부정확하면 그냥 결과가 안나옴.
-    @Override
-    protected boolean isLowAccuracy(Elements elems) {
-    	return false;
-    }
 
     @Override
     protected int getTimeout() {
     	return TIMEOUT;
-    }
-    
-    @Override
-    protected boolean isNaverShopping() {
-    	return false;
     }
 
 }
