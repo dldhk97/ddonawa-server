@@ -16,7 +16,7 @@ import parser.ParserManager;
 import utility.IOHandler;
 
 public class CollectedInfoTask {
-	private final int MIN_CODE_RECOGNIZE_LENGTH = 4;		// n자리 이상부터 A-Za-z0-9로 시작하고 끝나는 단어는 코드로 인식함. 정확성 상승을 위해 사용됨.
+	private final int MIN_CODE_RECOGNIZE_LENGTH = 3;		// n자리 이상부터 A-Za-z0-9로 시작하고 끝나는 단어는 코드로 인식함. 정확성 상승을 위해 사용됨.
 	private final double MIN_SIMILAR_PERCENTAGE = 0;		// 유사도가 n 이상은 되어야 고려대상으로 하겠다는 의미.
 	
 	// 상품정보로 다나와와 네이버쇼핑 파싱 후 가격 비교, DB에 누적
@@ -148,14 +148,14 @@ public class CollectedInfoTask {
 	// 상품명에 코드가 있다면, 수집정보 배열에서 해당 코드가 포함된 수집정보만 남긴다.
 	private void codeFilter(Product product, ArrayList<CollectedInfo> infoList){
 		String code = findCode(product.getName());
-//		IOHandler.getInstance().log("[DEBUG] 코드 : " + code);
+		IOHandler.getInstance().log("[DEBUG] 코드 : " + code);
 		
 		if(code != null) {
 			for(Iterator<CollectedInfo> it = infoList.iterator() ; it.hasNext();) {
 				CollectedInfo c = it.next();
 				if(!c.getProductName().contains(code)) {
 					it.remove();
-//					IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + " 코드미포함으로 제외됨.");
+					IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + " 코드미포함으로 제외됨.");
 				}
 			}
 		}
