@@ -428,6 +428,7 @@ public class ServerTask implements Runnable{
 				for(Tuple<Product, CollectedInfo> t : recent) {
 					for(Favorite f : favoriteList) {
 						// 찜 목록에 있는 상품과 이름이 같으면, 가격 비교
+//						IOHandler.getInstance().log("f.getProductName() : " + f.getProductName() + " VS t.getFirst().getName() : " + t.getFirst().getName());
 						if(f.getProductName().equals(t.getFirst().getName())) {
 							// 가격이 더 낮을때는, 결과 목록에 포함.
 							if(f.getTargetPrice() > t.getSecond().getPrice()) {
