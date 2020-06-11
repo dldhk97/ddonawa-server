@@ -53,7 +53,7 @@ public class ParserManager {
 			ParserTask danawaTask = new ParserTask(product, new DanawaParser());
 			danawaResult = threadPoolExecutor.submit(danawaTask);
 			
-			ParserTask naverShopThread = new ParserTask(product, new DanawaParser());
+			ParserTask naverShopThread = new ParserTask(product, new NaverShopParser());
 			naverShopResult = threadPoolExecutor.submit(naverShopThread);
 		}
 		catch(Exception e) {

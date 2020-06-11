@@ -47,8 +47,8 @@ public class CollectedInfoTask {
 					CollectedInfo mostInexpensiveInfo = getMostInexpensive(filtered);
 					
 					if(mostInexpensiveInfo != null) {
-//						IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
-//						IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
+						IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
+						IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
 						
 						// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
 						mostInexpensiveInfo.setProductName(product.getName());
@@ -113,29 +113,29 @@ public class CollectedInfoTask {
 		}
 		
 		try {
-//			IOHandler.getInstance().log("[DEBUG]-------------------원본-------------------");
-//			int debugCnt = 0;
-//			for(CollectedInfo c : infoList) {
-//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-//			}
+			IOHandler.getInstance().log("[DEBUG]-------------------원본-------------------");
+			int debugCnt = 0;
+			for(CollectedInfo c : infoList) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
 			
 			// 필터 1 : 상품명에 코드가 있다면, 해당되는 수집정보만 남긴다.
 			codeFilter(product, infoList);
 			
-//			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
-//			debugCnt = 0;
-//			for(CollectedInfo c : infoList) {
-//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-//			}
+			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
+			debugCnt = 0;
+			for(CollectedInfo c : infoList) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
 			
 			// 필터 2 : 유사도를 비교한다. 유사도가 n 이하인 경우에만 남긴다.
 			simliarFilter(product, infoList);
 			
-//			IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
-//			debugCnt = 0;
-//			for(CollectedInfo c : infoList) {
-//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-//			}
+			IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
+			debugCnt = 0;
+			for(CollectedInfo c : infoList) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
 			return infoList.size() > 0 ? infoList : null;
 		}
 		catch(Exception e) {

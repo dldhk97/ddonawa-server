@@ -93,4 +93,10 @@ public class DanawaParser extends Parser {
     	return false;
     }
 
+    private static final int TIMEOUT = 5;
+    @Override
+    protected int getTimeout() {
+    	return TIMEOUT;
+    }
+
 }

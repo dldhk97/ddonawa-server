@@ -20,8 +20,6 @@ public class SeleniumManager {
 	public final String WEB_DRIVER_ID = "webdriver.chrome.driver";
 	public final String WEB_DRIVER_PATH = ".\\\\driver\\\\chromedriver_83.0.4103.39_win32.exe";
 	
-	private final int TIMEOUT_CRWAL = 5;		// 크롤링 5초 안에 안되면 ABORT
-	
 	private WebDriver driver;
 
 	// 셀레니움 준비	
@@ -36,9 +34,9 @@ public class SeleniumManager {
 	}
 	
 	// 암시적 대기 후 크롤 (페이지가 로딩되길 기다렸다가 크롤)
-	public String implicitCrawl(String url) throws Exception{
+	public String implicitCrawl(String url, int timeout) throws Exception{
 		
-        driver.manage().timeouts().implicitlyWait(TIMEOUT_CRWAL, TimeUnit.SECONDS);
+        driver.manage().timeouts().implicitlyWait(timeout, TimeUnit.SECONDS);
 		driver.get(url);
 		
 		String result = driver.getPageSource();
@@ -46,9 +44,9 @@ public class SeleniumManager {
 	}
 
 	// 명시적 대기 후 크롤 (클래스명이 로드될때까지 대기, 클래스가 끝까지 안보이면 예외발생)
-	public String explicitCrawl(String url, String className) throws Exception{
+	public String explicitCrawl(String url, String className, int timeout) throws Exception{
 		
-        WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_CRWAL);
+        WebDriverWait wait = new WebDriverWait(driver, timeout);
         driver.get(url);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className(className)));
       
@@ -57,14 +55,14 @@ public class SeleniumManager {
 	}
 	
 	// 페이지가 모두 로드되기까지 기다리고나서 파싱
-	public String waitForLoadCrawl(String url) throws Exception{
+	public String waitForLoadCrawl(String url, int timeout) throws Exception{
 		ExpectedCondition<Boolean> expectation = new ExpectedCondition<Boolean>() {
 			@Override
 			public Boolean apply(WebDriver driver) {
 				return ((JavascriptExecutor)driver).executeScript("return document.readyState").equals("complete");
 			}
 		};
-		Wait<WebDriver> wait = new WebDriverWait(driver, TIMEOUT_CRWAL);
+		Wait<WebDriver> wait = new WebDriverWait(driver, timeout);
 		
 		wait.until(expectation);
 		

@@ -27,7 +27,8 @@ public abstract class Parser {
 			
 			// 셀레니움으로 크롤링
 			String targetUrl = getBaseUrl() + encoded;
-			orgHtml = sm.explicitCrawl(targetUrl, getExplicitClassName());
+			
+			orgHtml = sm.explicitCrawl(targetUrl, getExplicitClassName(), getTimeout());
 			
 			// 필요한 정보 빼내기
 			return parseProduct(orgHtml);
@@ -91,6 +92,7 @@ public abstract class Parser {
 	protected abstract String getProductClassName();	// 클래스에 맞게 상품을 특정하는 html-className을 가져옴
 	protected abstract String getExplicitClassName();
     protected abstract String getLowAccuracyClassName();
+    protected abstract int getTimeout();
 	
 	// HTML 파싱
 	protected abstract String getHref(Element product);
