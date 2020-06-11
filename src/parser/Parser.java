@@ -23,6 +23,7 @@ public abstract class Parser {
 	
 	// 문자열로 다나와/네이버쇼핑에 검색 후 목록 나열함.
 	public ArrayList<CollectedInfo> parse(String searchStr, SeleniumManager sm)  {
+		boolean isNaver =  isNaverShopping();
 		String orgHtml = null;
 		
 		try {
@@ -41,7 +42,8 @@ public abstract class Parser {
 		}
 		catch(TimeoutException te) {
 			// 검색 결과가 없거나 타임아웃
-			System.out.println("검색 결과가 없거나 타임아웃 발생");
+			String parserName = isNaver ? "네이버파서" : "다나와파서";
+			System.out.println(parserName + " : 검색 결과가 없거나 타임아웃 발생");
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("Parser.parse", e);
