@@ -28,32 +28,36 @@ public class CollectedInfoTask {
 			long debugStartTime = System.currentTimeMillis();
 			
 			// 다나와 & 네이버 파싱
-			ArrayList<CollectedInfo> received = ParserManager.getInstance().requestParse(product);
+			Tuple<ArrayList<CollectedInfo>, ArrayList<CollectedInfo>> received = ParserManager.getInstance().requestParse(product);
 			
 			if(received == null) {
 				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 파싱 실패");
 				response = new Response(ResponseType.FAILED, "서버에서 수집 정보 파싱에 실패했습니다.");
 			}
 			else {
-				// 정확한 수집정보 선정을 위한 유사도 필터링
-				ArrayList<CollectedInfo> filtered = filtering(product, received);
+				ArrayList<CollectedInfo> danawaParsed = received.getFirst();
+				ArrayList<CollectedInfo> naverShopParsed = received.getSecond();
 				
-				if(filtered == null) {
+				// 정확한 수집정보 선정을 위한 유사도 필터링
+				ArrayList<CollectedInfo> danawaFiltered = filtering(product, danawaParsed);
+				ArrayList<CollectedInfo> naverShopFiltered = filtering(product, naverShopParsed);
+				
+				if(danawaFiltered == null && naverShopFiltered == null) {
 					IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 동일한 제품을 찾는데 실패했습니다!");
 					response = new Response(ResponseType.SUCCEED, "동일한 제품을 찾는데 실패했습니다!");
 				}
 				else {
 					// 목록 중 가장 저렴한 수집정보 선정
-					CollectedInfo mostInexpensiveInfo = getMostInexpensive(filtered);
+					CollectedInfo mostProperInfo = getMostProper(danawaFiltered, naverShopFiltered);
 					
-					if(mostInexpensiveInfo != null) {
-						IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostInexpensiveInfo.getProductName() + ", 가격 : " + mostInexpensiveInfo.getPrice());
+					if(mostProperInfo != null) {
+						IOHandler.getInstance().log("[DEBUG]최종 최저가 상품 : " + mostProperInfo.getProductName() + ", 가격 : " + mostProperInfo.getPrice());
 						IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName());
 						
 						// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
-						mostInexpensiveInfo.setProductName(product.getName());
+						mostProperInfo.setProductName(product.getName());
 						CollectedInfoManager cim = new CollectedInfoManager();
-						isUpdated = cim.upsert(mostInexpensiveInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
+						isUpdated = cim.upsert(mostProperInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
 						if(isUpdated) {
 							IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 업데이트 성공!");
 							response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트 성공!");
@@ -176,6 +180,30 @@ public class CollectedInfoTask {
 		}
 	}
 	
+	// 가장 적절한 상품 골라 반환
+	private CollectedInfo getMostProper(ArrayList<CollectedInfo> danawaFiltered, ArrayList<CollectedInfo> naverShopFiltered) {
+		CollectedInfo danawaFirst = null;
+		CollectedInfo naverShopFirst = null;
+		if(danawaFiltered != null && danawaFiltered.size() >= 0) {
+			danawaFirst = danawaFiltered.get(0);
+		}
+		
+		if(naverShopFiltered != null && naverShopFiltered.size() >= 0) {
+			naverShopFirst = naverShopFiltered.get(0);
+		}
+		
+		if(danawaFirst != null && naverShopFirst != null) {
+			return danawaFirst.getPrice() > naverShopFirst.getPrice() ? naverShopFirst : danawaFirst;
+		}
+		else if(danawaFirst != null) {
+			return danawaFirst;
+		}
+		else {
+			return naverShopFirst;
+		}
+	}
+	
+	@Deprecated
 	// 가장 저렴한 상품 선택하여 반환
 	private CollectedInfo getMostInexpensive(ArrayList<CollectedInfo> infoList) {
 		if(infoList == null || infoList.size() <= 0) {

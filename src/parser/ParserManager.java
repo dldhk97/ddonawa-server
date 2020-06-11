@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import model.CollectedInfo;
 import model.Product;
+import model.Tuple;
 import utility.IOHandler;
 
 // 파싱용 쓰레드 생성 및 관리
@@ -46,7 +47,7 @@ public class ParserManager {
 	}
 	
 	// 다나와와 네이버쇼핑에서 상품찾기 파싱 요청을 한다.
-	public ArrayList<CollectedInfo> requestParse(Product product) {
+	public Tuple<ArrayList<CollectedInfo>, ArrayList<CollectedInfo>> requestParse(Product product) {
 		Future<ArrayList<CollectedInfo>> danawaResult = null, naverShopResult = null;
 		
 		try {
@@ -64,11 +65,13 @@ public class ParserManager {
 			ArrayList<CollectedInfo> danawaParsed = danawaResult.get();
 			ArrayList<CollectedInfo> naverShopParsed = naverShopResult.get();
 			if(danawaParsed != null && naverShopParsed != null) {
-				danawaParsed.addAll(naverShopParsed);
-				return danawaParsed;
+				return new Tuple<ArrayList<CollectedInfo>, ArrayList<CollectedInfo>>(danawaParsed, naverShopParsed);
+			}
+			else if (danawaParsed != null){
+				return new Tuple<ArrayList<CollectedInfo>, ArrayList<CollectedInfo>>(danawaParsed, null);
 			}
 			else {
-				return danawaParsed != null ? danawaParsed : naverShopParsed;
+				return new Tuple<ArrayList<CollectedInfo>, ArrayList<CollectedInfo>>(null, naverShopParsed);
 			}
 		}
 		catch(Exception e) {
