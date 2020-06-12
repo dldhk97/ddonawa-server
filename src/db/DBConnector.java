@@ -1,7 +1,5 @@
 package db;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -13,8 +11,9 @@ public class DBConnector {
 	// 싱글톤 패턴
 	private static DBConnector _instance;
 	
-	private Connection connection = null;
-	private Statement state = null;
+//	private Statement state = null;
+	
+	private static DBCP _DBCP;
 	
 	// IOHandler 사용 시 IOHandler.getInstance().메소드명 으로 사용하면 됨.
 	public static DBConnector getInstance()
@@ -24,11 +23,12 @@ public class DBConnector {
 		return _instance;
 	}
 	
-	public DBConnector() {
+	private DBConnector() {
 		try {
-			Class.forName(DBInfo.JDBC_DRIVER.toString());
-			connection = DriverManager.getConnection(DBInfo.DB_URL.toString(), DBInfo.USER_NAME.toString(), DBInfo.PASSWORD.toString());
-			state = connection.createStatement();
+			_DBCP = new DBCP();
+//			Class.forName(DBInfo.JDBC_DRIVER.toString());
+//			connection = DriverManager.getConnection(DBInfo.DB_URL.toString(), DBInfo.USER_NAME.toString(), DBInfo.PASSWORD.toString());
+//			state = connection.createStatement();
 		}
 		catch(Exception e) {
 			IOHandler.getInstance().log("DBConnector.onCreate", e);
@@ -36,26 +36,42 @@ public class DBConnector {
 	}
 	
 	public boolean isConnected() throws Exception{
-		if(connection == null || connection.isClosed()) {
-			return false;
-		}
-		return true;
+		return _DBCP.isConnected();
 	}
 	
 	// sql문과 열 이름을 전달받으면 쿼리 후 해당되는 테이블을 받아옴
 	public ArrayList<ArrayList<String>> select(String sql, ArrayList<String> columnNames) throws Exception{
-		ResultSet resultSet = state.executeQuery(sql);
-		ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
-		while(resultSet.next()) {
-			ArrayList<String> row = new ArrayList<String>();
-			for(String cn : columnNames) {
-				row.add(resultSet.getString(cn));
+		Statement state = null;
+		MyConnection mc = null;
+		try {
+			mc = _DBCP.getMyConnection();
+			state = mc.getConnection().createStatement();
+			ResultSet resultSet = state.executeQuery(sql);
+			ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+			while(resultSet.next()) {
+				ArrayList<String> row = new ArrayList<String>();
+				for(String cn : columnNames) {
+					row.add(resultSet.getString(cn));
+				}
+				result.add(row);
 			}
-			result.add(row);
+			
+			resultSet.close();
+			state.close();
+			mc.setBusy(false);
+			return result;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		if(state != null) {
+			state.close();			
+		}
+		if(mc != null) {
+			mc.setBusy(false);
 		}
 		
-		resultSet.close();
-		return result;
+		return null;
 	}
 	
 	public int insert(String dbName, String tableName, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
@@ -92,7 +108,27 @@ public class DBConnector {
 		String sql = sb.toString();
 		
 		// SQL문 실행
-		return state.executeUpdate(sql);
+		Statement state = null;
+		MyConnection mc = null;
+		try {
+			mc = _DBCP.getMyConnection();
+			state = mc.getConnection().createStatement();
+			int result = state.executeUpdate(sql);
+			state.close();
+			mc.setBusy(false);
+			return result;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		if(state != null) {
+			state.close();
+		}
+		if(mc != null) {
+			mc.setBusy(false);
+		}
+		
+		return 0;
 	}
 	
 	public int delete(String dbName, String tableName, ArrayList<String> columnNames, ArrayList<String> values) throws Exception{
@@ -120,8 +156,28 @@ public class DBConnector {
 		String sql = sb.toString();
 		IOHandler.getInstance().log("[DEBUG] DELETE SQL : " + sql);
 		
+		Statement state = null;
+		MyConnection mc = null;
+		try {
+			mc = _DBCP.getMyConnection();
+			state = mc.getConnection().createStatement();
+			int result = state.executeUpdate(sql);
+			state.close();
+			mc.setBusy(false);
+			return result;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		if(state != null) {
+			state.close();
+		}
+		if(mc != null) {
+			mc.setBusy(false);
+		}
+		
 		// SQL문 실행
-		return state.executeUpdate(sql);
+		return 0;
 	}
 	
 	// 키 속성, 키 값이 일치하는 항목의 속성, 값을 변경함
@@ -165,23 +221,39 @@ public class DBConnector {
 		
 		String sql = sb.toString();
 		
+		Statement state = null;
+		MyConnection mc = null;
+		try {
+			mc = _DBCP.getMyConnection();
+			state = mc.getConnection().createStatement();
+			int result = state.executeUpdate(sql);
+			state.close();
+			mc.setBusy(false);
+			return result;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		if(state != null) {
+			state.close();
+		}
+		if(mc != null) {
+			mc.setBusy(false);
+		}
 		// SQL문 실행
 		return state.executeUpdate(sql);
 	}
 	
 	public void close() {
 		try {
-			if(state != null) {
-				state.close();
-			}			
-		}
-		catch(Exception e) {
-			IOHandler.getInstance().log("DBConnector.finalize", e);
-		}
-		
-		try {
-			if(connection != null) {
-				connection.close();
+			if(_DBCP != null) {
+				boolean isClosedAll = _DBCP.closeAllConnection();
+				if(isClosedAll) {
+					IOHandler.getInstance().log("모든 커넥션이 종료되었습니다.");
+				}
+				else {
+					IOHandler.getInstance().log("모든 커넥션을 종료하는데 실패했습니다.");
+				}
 			}			
 		}
 		catch(Exception e) {

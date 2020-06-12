@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import console.ConsoleTask;
 import console.Menu;
 import db.DBConnector;
+import db.DBManager;
 import network.NetworkInfo;
 import parser.ParserManager;
 import task.ServerTask;
@@ -95,10 +96,10 @@ public class Main{
 	
 	private static void shutdown() {
 		try {
-			DBConnector.getInstance().close();
 			ParserManager.getInstance().close();
 			if(serverThread != null)
 				serverThread.close();
+			DBConnector.getInstance().close();
 			IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
 		}
 		catch (Exception e) {
@@ -113,7 +114,10 @@ public class Main{
 		try {
 			serverThread = new ServerThread();
 			Thread t = new Thread(serverThread);
-			t.start();			
+			t.start();
+			
+			// 커넥션 풀 생성
+			DBConnector.getInstance();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -152,10 +156,8 @@ class ServerThread implements Runnable{
 		try {
 			while(isRunning) {
 				clientSocket = serverSocket.accept();		
-//				IOHandler.getInstance().log("[SYSTEM]클라이언트 요청 받음");
 				ServerTask st = new ServerTask(clientSocket);
 				threadPool.execute(st);
-//				IOHandler.getInstance().log("[SYSTEM]서버 태스크 실행");
 			}
 		}
 		catch (SocketException se) {
@@ -176,13 +178,13 @@ class ServerThread implements Runnable{
 	
 	public void close() {
 		try {
-			IOHandler.getInstance().log("[SYSTEM]서버스레드 종료 요청");
+			IOHandler.getInstance().log("[SYSTEM] 서버스레드 종료 요청");
 			isRunning = false;
 			serverSocket.close();
-			IOHandler.getInstance().log("[SYSTEM]서버 소켓 종료됨");
+			IOHandler.getInstance().log("[SYSTEM] 서버 소켓 종료됨");
 			
 			threadPool.shutdown();
-			IOHandler.getInstance().log("[SYSTEM]스레드풀 종료됨");
+			IOHandler.getInstance().log("[SYSTEM] 스레드풀 종료됨");
 		} 
 		catch (IOException e) {
 			e.printStackTrace();
