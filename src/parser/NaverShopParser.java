@@ -54,10 +54,13 @@ public class NaverShopParser extends Parser{
 				 
 				 // 유사도 0.4 미만이면 안넣음.
 				 String similarityStr = (String) obj.get("similarity");
-				 double similarity = Double.parseDouble(similarityStr);
-				 if(similarity < MIN_SIMILIARITY) {
-					 continue;
+				 if(similarityStr != null) {
+					 double similarity = Double.parseDouble(similarityStr);
+					 if(similarity < MIN_SIMILIARITY) {
+						 continue;
+					 }
 				 }
+				 
 				 
 				 String productName = (String) obj.get("productName");
 				 
