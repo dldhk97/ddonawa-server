@@ -21,6 +21,7 @@ import utility.IOHandler;
 public class Main{
 	
 	private static ServerThread serverThread = null;
+	private static boolean isShutdownSuccessful = false;
 
 	public static void main(String[] args) {
 		run();
@@ -70,7 +71,10 @@ public class Main{
 						break;
 					case 0:
 						shutdown();
-						return;
+						if(isShutdownSuccessful) {
+							return;
+						}
+						break;
 					default:
 						break;
 					}
@@ -99,17 +103,27 @@ public class Main{
 	private static void shutdown() {
 		try {
 			ParserManager.getInstance().close();
-			if(serverThread != null)
-				serverThread.close();
+			if(serverThread != null) {
+				try {
+					serverThread.close();					
+				}
+				catch (Exception e) {
+					IOHandler.getInstance().log("[SYSTEM]서버 소켓 종료 중 오류 발생!");
+					e.printStackTrace();
+				}
+			}
+				
 			if(CSVReader.isRunning()) {
 				CSVReader.abortDump();
 			}
 			DBCP.getInstance().closeAllConnection();
 			IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
+			isShutdownSuccessful = true;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 			IOHandler.getInstance().log("[SYSTEM]시스템 비정상적으로 종료됨");
+			isShutdownSuccessful = false;
 		}
 		
 		

@@ -21,7 +21,10 @@ public class DBConnector {
 		Statement state = null;
 		MyConnection mc = null;
 		try {
+//			long startTime = System.currentTimeMillis();
+			
 			mc = DBCP.getInstance().getMyConnection();
+			
 			state = mc.getConnection().createStatement();
 			ResultSet resultSet = state.executeQuery(sql);
 			ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
@@ -32,6 +35,9 @@ public class DBConnector {
 				}
 				result.add(row);
 			}
+			
+//			long diff = (long) ((System.currentTimeMillis() - startTime) / 1000.0);
+//			IOHandler.getInstance().log("[DEBUG]select : " + diff + "초, id : " + mc.getId());
 			
 			resultSet.close();
 			state.close();

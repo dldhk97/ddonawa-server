@@ -10,7 +10,7 @@ import utility.IOHandler;
 public class DBCP {
 	private static final int DEFAULT_CONNECTION = 10;
 	private static final int MAX_CONNECTION = 20;
-	private static final int CONNECTION_VALID_TIMEOUT = 1;
+	private static final int CONNECTION_VALID_TIMEOUT = 0;
 	
 	private static ArrayList<MyConnection> connections;
 	
@@ -62,12 +62,12 @@ public class DBCP {
 	private MyConnection getOrCreateConnection(){
 		for(MyConnection mc : connections) {
 			try {
-				if(mc != null && mc.getConnection().isValid(CONNECTION_VALID_TIMEOUT) && !mc.isBusy()) {
+				if(mc != null && !mc.isBusy()) {
 //					IOHandler.getInstance().log("[DBCP] getOrCreateConnection : 기존 커넥션 반환됨");
 					return mc;
 				}
 			} 
-			catch (SQLException e) {
+			catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

@@ -67,7 +67,7 @@ class DumpTask implements Runnable{
 	private boolean abort = false;
 	private boolean isRunning = false;
 	
-	private static final int MAX_THREAD = 2;
+	private static final int MAX_THREAD = 1;
 	private final ExecutorService executorService;
 	private ArrayList<DumpThread> threads = new ArrayList<DumpThread>();
 	private ArrayList<Future<Boolean>> threadResults = new ArrayList<>(); 

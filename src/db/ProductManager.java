@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import model.Category;
 import model.Product;
+import utility.IOHandler;
 
 public class ProductManager extends DBManager {
 	

@@ -159,6 +159,7 @@ public class ServerTask implements Runnable{
 		// 상품 작업 생성
 		ProductTask pt = new ProductTask();
 		
+		IOHandler.getInstance().log("[DEBUG-" + Thread.currentThread().getId() + "] 검색 요청");
 		// 사용자에게서 받아온 검색어 획득 후 검색
 		String searchWord = (String) receivedProtocol.getObject();
 		Tuple<Response, ArrayList<Product>> productResult = pt.searchByProductName(searchWord);
@@ -167,6 +168,7 @@ public class ServerTask implements Runnable{
 		Response response = productResult.getFirst();
 		ArrayList<Product> productList = productResult.getSecond();
 		
+		IOHandler.getInstance().log("[DEBUG-" + Thread.currentThread().getId() + "] 최근 수집정보 목록 획득 요청");
 		// 상품정보 - 최근가격정보가 쌍으로 이루어진 결과 배열 생성
 		ArrayList<Tuple<Product, CollectedInfo>> totalResult = getRecentProductTupleList(productList);
 		
