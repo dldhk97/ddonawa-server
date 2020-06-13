@@ -16,7 +16,8 @@ public class FavoriteManager extends DBManager {
 				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_FAVORITE.toString() + "` WHERE `" +
 				DBInfo.TABLE_FAVORITE_COLUMN_ACCOUNTID.toString() + "` = '" + accountId + "'";
 		
-		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
+		DBConnector dc = new DBConnector();
+		ArrayList<ArrayList<String>> received = dc.select(query, tableColumns);
 		
 		// 2차원 문자열 배열을 1차원 Favorite 배열로 변환 후 반환
 		return getModelList(received);

@@ -8,43 +8,20 @@ import utility.IOHandler;
 
 public class DBConnector {
 	
-	// 싱글톤 패턴
-	private static DBConnector _instance;
-	
-//	private Statement state = null;
-	
-	private static DBCP _DBCP;
-	
-	// IOHandler 사용 시 IOHandler.getInstance().메소드명 으로 사용하면 됨.
-	public static DBConnector getInstance()
-	{
-		if(_instance == null)
-			_instance = new DBConnector();
-		return _instance;
-	}
-	
-	private DBConnector() {
-		try {
-			_DBCP = new DBCP();
-//			Class.forName(DBInfo.JDBC_DRIVER.toString());
-//			connection = DriverManager.getConnection(DBInfo.DB_URL.toString(), DBInfo.USER_NAME.toString(), DBInfo.PASSWORD.toString());
-//			state = connection.createStatement();
-		}
-		catch(Exception e) {
-			IOHandler.getInstance().log("DBConnector.onCreate", e);
-		}
-	}
-	
-	public boolean isConnected() throws Exception{
-		return _DBCP.isConnected();
-	}
+//	public static void createConnectionPool() {
+//		DBCP.getInstance();
+//	}
+//	
+//	public static boolean isConnected() throws Exception{
+//		return DBCP.getInstance().isConnected();
+//	}
 	
 	// sql문과 열 이름을 전달받으면 쿼리 후 해당되는 테이블을 받아옴
 	public ArrayList<ArrayList<String>> select(String sql, ArrayList<String> columnNames) throws Exception{
 		Statement state = null;
 		MyConnection mc = null;
 		try {
-			mc = _DBCP.getMyConnection();
+			mc = DBCP.getInstance().getMyConnection();
 			state = mc.getConnection().createStatement();
 			ResultSet resultSet = state.executeQuery(sql);
 			ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
@@ -111,7 +88,7 @@ public class DBConnector {
 		Statement state = null;
 		MyConnection mc = null;
 		try {
-			mc = _DBCP.getMyConnection();
+			mc = DBCP.getInstance().getMyConnection();
 			state = mc.getConnection().createStatement();
 			int result = state.executeUpdate(sql);
 			state.close();
@@ -159,7 +136,7 @@ public class DBConnector {
 		Statement state = null;
 		MyConnection mc = null;
 		try {
-			mc = _DBCP.getMyConnection();
+			mc = DBCP.getInstance().getMyConnection();
 			state = mc.getConnection().createStatement();
 			int result = state.executeUpdate(sql);
 			state.close();
@@ -224,7 +201,7 @@ public class DBConnector {
 		Statement state = null;
 		MyConnection mc = null;
 		try {
-			mc = _DBCP.getMyConnection();
+			mc = DBCP.getInstance().getMyConnection();
 			state = mc.getConnection().createStatement();
 			int result = state.executeUpdate(sql);
 			state.close();
@@ -244,27 +221,27 @@ public class DBConnector {
 		return state.executeUpdate(sql);
 	}
 	
-	public void close() {
-		try {
-			if(_DBCP != null) {
-				boolean isClosedAll = _DBCP.closeAllConnection();
-				if(isClosedAll) {
-					IOHandler.getInstance().log("모든 커넥션이 종료되었습니다.");
-				}
-				else {
-					IOHandler.getInstance().log("모든 커넥션을 종료하는데 실패했습니다.");
-				}
-			}			
-		}
-		catch(Exception e) {
-			IOHandler.getInstance().log("[DBConnector.finalize]", e);
-		}
-		IOHandler.getInstance().log("[SYSTEM]MYSQL Closed");
-	}
+//	public static void close() {
+//		try {
+//			if(DBCP.getInstance() != null) {
+//				boolean isClosedAll = DBCP.getInstance().closeAllConnection();
+//				if(isClosedAll) {
+//					IOHandler.getInstance().log("모든 커넥션이 종료되었습니다.");
+//				}
+//				else {
+//					IOHandler.getInstance().log("모든 커넥션을 종료하는데 실패했습니다.");
+//				}
+//			}			
+//		}
+//		catch(Exception e) {
+//			IOHandler.getInstance().log("[DBConnector.finalize]", e);
+//		}
+//		IOHandler.getInstance().log("[SYSTEM]MYSQL Closed");
+//	}
 	
-	@Override
-	protected void finalize() throws Throwable {
-		super.finalize();
-		close();
-	}
+//	@Override
+//	protected void finalize() throws Throwable {
+//		super.finalize();
+//		close();
+//	}
 }

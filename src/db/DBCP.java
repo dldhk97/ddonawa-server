@@ -12,11 +12,18 @@ public class DBCP {
 	private static final int MAX_CONNECTION = 20;
 	private static final int CONNECTION_VALID_TIMEOUT = 1;
 	
-//	private ArrayList<Connection> connections;
-	private ArrayList<MyConnection> connections;
+	private static ArrayList<MyConnection> connections;
 	
-	public DBCP() {
-//		connections = new ArrayList<Connection>(DEFAULT_CONNECTION);
+	// 싱글톤임
+	private static DBCP _instance;
+	
+	public static DBCP getInstance() {
+		if(_instance == null)
+			_instance = new DBCP();
+		return _instance;
+	}
+	
+	private DBCP() {
 		connections = new ArrayList<>(DEFAULT_CONNECTION);
 		try {
 			Class.forName(DBInfo.JDBC_DRIVER.toString());

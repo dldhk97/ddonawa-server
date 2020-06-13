@@ -24,7 +24,8 @@ public class CollectedInfoManager extends DBManager {
 				DBInfo.TABLE_COLLECTEDINFO_COLUMN_COLLECTEDDATE.toString() + "` DESC";
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
+		DBConnector dc = new DBConnector();
+		ArrayList<ArrayList<String>> received = dc.select(query, tableColumns);
 		
 		// 2차원 문자열 배열을 1차원 CollectedInfo 배열로 변환 후 반환
 		return getModelList(received);
@@ -72,7 +73,8 @@ public class CollectedInfoManager extends DBManager {
 		}
 		
 		// 쿼리
-		int cnt = DBConnector.getInstance().update(DBInfo.DB_NAME.toString(), DBInfo.TABLE_COLLECTEDINFO.toString(),keyColumns, keyValues, columns, values);
+		DBConnector dc = new DBConnector();
+		int cnt = dc.update(DBInfo.DB_NAME.toString(), DBInfo.TABLE_COLLECTEDINFO.toString(),keyColumns, keyValues, columns, values);
 		
 		return cnt;
 	}

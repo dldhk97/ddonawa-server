@@ -30,7 +30,8 @@ public class ProductManager extends DBManager {
 		}
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
+		DBConnector dc = new DBConnector();
+		ArrayList<ArrayList<String>> received = dc.select(query, tableColumns);
 		
 		// 2차원 문자열 배열을 1차원 Product 배열로 변환 후 반환
 		return getModelList(received);
@@ -55,7 +56,8 @@ public class ProductManager extends DBManager {
 		}
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
+		DBConnector dc = new DBConnector();
+		ArrayList<ArrayList<String>> received = dc.select(query, tableColumns);
 		
 		// 2차원 문자열 배열을 1차원 Product 배열로 변환 후 반환
 		return getModelList(received);

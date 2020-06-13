@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import db.BigCategoryManager;
 import db.CategoryManager;
 import db.CollectedInfoManager;
+import db.DBCP;
 import db.DBConnector;
 import db.ProductManager;
 import model.BigCategory;
@@ -27,36 +28,44 @@ import utility.IOHandler;
 
 public class CSVReader {
 	
-	private static DumpThread _dumpThread;
+	private static Thread _dumpThread; 
+	private static DumpTask _dumpTask;
 	
 	public void dumpCSVBackground(final String path) {
-		_dumpThread = new DumpThread(path);
+		_dumpTask = new DumpTask(path);
 		
-		Thread t = new Thread(_dumpThread);
-		t.start();
+		_dumpThread = new Thread(_dumpTask);
+		_dumpThread.start();
 	}
 	
-	public void abortDump() {
-		if(_dumpThread != null) {
-			_dumpThread.abortDump();
+	public static void abortDump() {
+		if(_dumpTask != null) {
+			try {
+				_dumpTask.abortDump();
+				IOHandler.getInstance().log("[공공데이터 DB] 백그라운드 스레드가 종료되기를 기다립니다.");
+				_dumpThread.join();
+				IOHandler.getInstance().log("[공공데이터 DB] 백그라운드 스레드가 종료되었습니다.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
-	public boolean isRunning() {
-		if(_dumpThread != null) {
-			return _dumpThread.isRunning();
+	public static boolean isRunning() {
+		if(_dumpTask != null) {
+			return _dumpTask.isRunning();
 		}
 		return false;
 	}
 }
 
-class DumpThread implements Runnable{
+class DumpTask implements Runnable{
 	
 	private final String path;
 	private boolean abort = false;
 	private boolean isRunning = false;
 	
-	public DumpThread(final String path) {
+	public DumpTask(final String path) {
 		this.path = path;
 	}
 	
@@ -117,7 +126,7 @@ class DumpThread implements Runnable{
 				ArrayList<CSVProduct> productList = readFile(filePath);
 				
 				// DB 연결 확인
-				if(!DBConnector.getInstance().isConnected()) {
+				if(!DBCP.getInstance().isConnected()) {
 		    		IOHandler.getInstance().log("[CSVReader.dumpCSV]DB에 연결할 수 없음");
 					return false;
 				}

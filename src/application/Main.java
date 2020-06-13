@@ -9,10 +9,12 @@ import java.util.concurrent.Executors;
 
 import console.ConsoleTask;
 import console.Menu;
+import db.DBCP;
 import db.DBConnector;
 import db.DBManager;
 import network.NetworkInfo;
 import parser.ParserManager;
+import task.CSVReader;
 import task.ServerTask;
 import utility.IOHandler;
 
@@ -99,7 +101,10 @@ public class Main{
 			ParserManager.getInstance().close();
 			if(serverThread != null)
 				serverThread.close();
-			DBConnector.getInstance().close();
+			if(CSVReader.isRunning()) {
+				CSVReader.abortDump();
+			}
+			DBCP.getInstance().closeAllConnection();
 			IOHandler.getInstance().log("[SYSTEM]시스템 종료됨");
 		}
 		catch (Exception e) {
@@ -117,7 +122,7 @@ public class Main{
 			t.start();
 			
 			// 커넥션 풀 생성
-			DBConnector.getInstance();
+			DBCP.getInstance();
 		}
 		catch (Exception e) {
 			e.printStackTrace();

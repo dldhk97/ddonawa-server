@@ -15,7 +15,8 @@ public abstract class DBManager {
 		String query = getSelectQueryByKeys(keyValues);
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
+		DBConnector dc = new DBConnector();
+		ArrayList<ArrayList<String>> received = dc.select(query, tableColumns);
 		
 		// 결과 반환
 		ArrayList<?> result = getModelList(received);
@@ -31,7 +32,8 @@ public abstract class DBManager {
 		ArrayList<String> values = getValuesFromObject(object);
 		
 		// 쿼리
-		int cnt = DBConnector.getInstance().insert(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
+		DBConnector dc = new DBConnector();
+		int cnt = dc.insert(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
 		
 		return cnt;
 	}
@@ -44,7 +46,8 @@ public abstract class DBManager {
 		ArrayList<String> values = getKeyValuesFromObject(object);
 		
 		// 쿼리
-		int cnt = DBConnector.getInstance().delete(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
+		DBConnector dc = new DBConnector();
+		int cnt = dc.delete(DBInfo.DB_NAME.toString(), getTableName(), columns, values);
 		
 		return cnt;
 	}
@@ -68,7 +71,8 @@ public abstract class DBManager {
 				DBInfo.DB_NAME.toString() + "`.`" + getTableName() + "`";
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> received = DBConnector.getInstance().select(query, tableColumns);
+		DBConnector dc = new DBConnector();
+		ArrayList<ArrayList<String>> received = dc.select(query, tableColumns);
 		
 		// 결과 반환
 		return getModelList(received);

@@ -16,13 +16,14 @@ public class AccountManager extends DBManager{
 		String searchStr = str.replace("'", "''");
 		
 		// 쿼리 생성
-		String query = query = "SELECT * FROM `" +
+		String query = "SELECT * FROM `" +
 				DBInfo.DB_NAME.toString() + "`.`" + DBInfo.TABLE_ACCOUNT.toString() + "` WHERE `" +
 				DBInfo.TABLE_ACCOUNT_COLUMN_ID.toString() + "` = '" + searchStr + "'";
 		
 		
 		// 쿼리
-		ArrayList<ArrayList<String>> receieved = DBConnector.getInstance().select(query, tableColumns);
+		DBConnector dc = new DBConnector();
+		ArrayList<ArrayList<String>> receieved = dc.select(query, tableColumns);
 		
 		// 2차원 문자열 배열을 1차원 Account 배열로 변환 후 반환
 		return getModelList(receieved);
