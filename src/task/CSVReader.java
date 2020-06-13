@@ -3,21 +3,23 @@ package task;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import db.BigCategoryManager;
 import db.CategoryManager;
 import db.CollectedInfoManager;
 import db.DBCP;
-import db.DBConnector;
 import db.ProductManager;
 import model.BigCategory;
 import model.CSVProduct;
@@ -42,9 +44,9 @@ public class CSVReader {
 		if(_dumpTask != null) {
 			try {
 				_dumpTask.abortDump();
-				IOHandler.getInstance().log("[공공데이터 DB] 백그라운드 스레드가 종료되기를 기다립니다.");
+				IOHandler.getInstance().log("[CSVDumpThread-메인스레드] 백그라운드 스레드가 종료되기를 기다립니다.");
 				_dumpThread.join();
-				IOHandler.getInstance().log("[공공데이터 DB] 백그라운드 스레드가 종료되었습니다.");
+				IOHandler.getInstance().log("[CSVDumpThread-메인스레드] 백그라운드 스레드가 종료되었습니다.");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -65,13 +67,23 @@ class DumpTask implements Runnable{
 	private boolean abort = false;
 	private boolean isRunning = false;
 	
+	private static final int MAX_THREAD = 2;
+	private final ExecutorService executorService;
+	private ArrayList<DumpThread> threads = new ArrayList<DumpThread>();
+	private ArrayList<Future<Boolean>> threadResults = new ArrayList<>(); 
+	
 	public DumpTask(final String path) {
 		this.path = path;
+		executorService = Executors.newFixedThreadPool(MAX_THREAD);
 	}
 	
 	public void abortDump() {
 		this.abort = true;
 		isRunning = false;
+		for(DumpThread dt : threads) {
+			dt.abort();
+		}
+		executorService.shutdown();
 	}
 	
 	public boolean isRunning() {
@@ -81,18 +93,45 @@ class DumpTask implements Runnable{
 	@Override
 	public void run() {
 		isRunning = true;
-		boolean isComplete = dumpCSV(path);
-		String message;
-		if(isComplete) {
-			message = "[공공데이터 DB] 모든 CSV가 DB에 갱신되었습니다.";
+		
+		// 경로 내 모든 CSV를 (쓰레드)작업에 등록한다.
+		boolean isAllSubmited = dumpCSV(path);
+		
+		if(isAllSubmited) {
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드] 모든 CSV가 작업에 등록되었습니다.");
 		}
 		else if(abort == true) {
-			message = "[공공데이터 DB] 사용자의 요청으로 중단되었습니다.";
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드] CSV 작업 등록이 사용자의 요청으로 중단되었습니다.");
 		}
 		else {
-			message = "[공공데이터 DB] CSV를 갱신하는 도중 오류가 발생하였습니다.";
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드] CSV 작업을 등록하는 도중 오류가 발생하였습니다.");
 		}
-		IOHandler.getInstance().log(message);
+		
+		// 모든 쓰레드 작업이 완료되길 기다리고, 결과 받는다.
+		int completed = 0;
+		for(Future<Boolean> f : threadResults) {
+			try {
+				Boolean b = f.get();
+				if(b == Boolean.TRUE) {
+					completed++;
+				}
+			} 
+			catch (Exception e) {
+				IOHandler.getInstance().log("[CSVDumpThread-메인스레드] DumpThread 결과를 기다리는 중 오류 발생!");
+				e.printStackTrace();
+			}
+		}
+		
+		if(completed == threads.size()) {
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드] 모든 CSV가 DB에 갱신되었습니다.");
+		}
+		else if(abort == true) {
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드] 사용자의 요청으로 중단되었습니다.");
+		}
+		else {
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드] CSV를 갱신하는 도중 오류가 발생하였습니다.");
+		}
+		
 		isRunning = false;
 	}
 	
@@ -109,7 +148,7 @@ class DumpTask implements Runnable{
 				}
 			});
 			
-			int succeedCnt = 0;
+			int submitedCnt = 0;
 			// 탐색한 모든 .csv 파일에 대하여 파싱
 			for(String fileName : fileList) {
 				String filePath = null;
@@ -122,43 +161,94 @@ class DumpTask implements Runnable{
 					filePath = path + "\\" + fileName;
 				}
 				
-				// 한 CSV 파일 읽기
-				ArrayList<CSVProduct> productList = readFile(filePath);
-				
-				// DB 연결 확인
-				if(!DBCP.getInstance().isConnected()) {
-		    		IOHandler.getInstance().log("[CSVReader.dumpCSV]DB에 연결할 수 없음");
+				if(abort) {
+					IOHandler.getInstance().log("[CSVDumpThread-메인스레드] 사용자의 요청으로 for문 중단");
 					return false;
 				}
 				
-				// DB에 업데이트
-				int cnt = 0;
-				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 시작(총 " + productList.size() + "개)");
-				for(CSVProduct p : productList) {
-					if(abort) {
-						IOHandler.getInstance().log("[공공데이터 DB] 사용자의 요청으로 중단됨.");
-						return false;
-					}
-					update(p);						
-					
-					// 1000항목당 한번씩 알림
-					if(cnt % 1000 == 0) {
-						int percentage = (100 * cnt / productList.size());
-						IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 중(" + cnt + "/" + productList.size() + ")" + "(" + percentage + "%)");
-					}
-					cnt++;
-				}
-				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 완료(총 " + productList.size() + "개)");
-				succeedCnt++;
+				// 스레드에 넣어 분할 작업한다!
+				DumpThread dt = new DumpThread(filePath);
+				threads.add(dt);
+				Future<Boolean> result = executorService.submit(dt);
+				
+				// 결과를 받을 객체(Future)는 따로 보관한다.
+				threadResults.add(result);
+
+				submitedCnt++;
 			}
-			IOHandler.getInstance().log("[공공데이터 DB] " + path +  " 경로 내 덤프 완료(" + succeedCnt + "/" + fileList.length + ")");
-			return succeedCnt == fileList.length ? true : false;
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드] " + path +  " 경로 내 작업 등록 완료(" + submitedCnt + "/" + fileList.length + ")");
+			return submitedCnt == fileList.length ? true : false;
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log("CSVReader.dumpCSV",e);
+			IOHandler.getInstance().log("[CSVDumpThread-메인스레드",e);
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	
+}
+
+class DumpThread implements Callable<Boolean> {
+	
+	private final String filePath;
+	private boolean abort = false;
+	
+	public DumpThread(final String filePath) {
+		this.filePath = filePath;
+	}
+	
+	public void abort() {
+		this.abort = true;
+	}
+	
+	@Override
+	public Boolean call() throws Exception {
+		ArrayList<CSVProduct> productList = null;
+		try {
+			// 한 CSV 파일 읽기
+			productList = readFile(filePath);
+		}
+		catch (Exception e) {
+			IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] 파일 읽는데 실패함.");
+			e.printStackTrace();
+			return false;
+		}
+		
+		// DB 연결 확인
+		if(!DBCP.getInstance().isConnected()) {
+    		IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"]DB에 연결할 수 없음");
+			return null;
+		}
+		
+		// DB에 업데이트
+		int cnt = 0;
+		IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] " + filePath + " 업데이트 시작(총 " + productList.size() + "개)");
+		
+		try {
+			for(CSVProduct p : productList) {
+				if(abort) {
+					IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] 사용자의 요청으로 중단됨.");
+					return false;
+				}
+				update(p);						
+				
+				// 1000항목당 한번씩 알림
+				if(cnt % 1000 == 0) {
+					int percentage = (100 * cnt / productList.size());
+					IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] " + filePath + " 업데이트 중(" + cnt + "/" + productList.size() + ")" + "(" + percentage + "%)");
+				}
+				cnt++;
+			}
+			IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] " + filePath + " 업데이트 완료(총 " + productList.size() + "개)");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] " + filePath + " 업데이트 도중 오류 발생! 업데이트 중단!");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	// 하나의 CSV 파일을 읽고 CSVProduct 배열 반환하는 메소드
@@ -188,19 +278,12 @@ class DumpTask implements Runnable{
 		            result.add(product);
 	        	}
 	        	catch (Exception e) {
-	        		IOHandler.getInstance().log("CSV 파일에 이상한 항목이 있어 무시했습니다.\n파일명:" + filePath + "\n에러라인:" + errorLine);
-//		        		e.printStackTrace();
+	        		IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] CSV 파일에 이상한 항목이 있어 무시했습니다.\n파일명:" + filePath + "\n에러라인:" + errorLine);
 				}
 	        }
 	        bufferedReader.close();
-	    } catch (FileNotFoundException e) {
-	        IOHandler.getInstance().log("CSVReader.read-FileNotFound", e);
-	        e.printStackTrace();
-	    } catch( IOException e ) {
-	    	IOHandler.getInstance().log("CSVReader.read-IO",e);
-	    	e.printStackTrace();
 	    } catch(Exception e) {
-	    	IOHandler.getInstance().log("CSVReader.read-Unknown",e);
+	    	IOHandler.getInstance().log("[CSVDumpThread-" + Thread.currentThread().getId() +"] CSVReader.read-Unknown",e);
 	    	e.printStackTrace();
 	    }
 	    return result;
@@ -272,5 +355,6 @@ class DumpTask implements Runnable{
 		BigCategory category = new BigCategory(bigCategoryId, bigCategoryName);
 		return category;
 	}
-	
+
+
 }

@@ -2,6 +2,10 @@ package task;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import db.CollectedInfoManager;
 import model.CollectedInfo;
@@ -19,13 +23,14 @@ public class CollectedInfoTask {
 	private final int MIN_CODE_RECOGNIZE_LENGTH = 3;		// n자리 이상부터 A-Za-z0-9로 시작하고 끝나는 단어는 코드로 인식함. 정확성 상승을 위해 사용됨.
 	private final double MIN_SIMILAR_PERCENTAGE = 0;		// 유사도가 n 이상은 되어야 고려대상으로 하겠다는 의미.
 	
+	private final static int COLLECT_TIMEOUT = 5;		// n초 내에 파싱안되면 클라이언트에게 기존 정보 내보냄. 물론 파싱은 계속된다.
+	
 	// 상품정보로 다나와와 네이버쇼핑 파싱 후 가격 비교, DB에 누적
 	public Response collect(Product product) {
-		boolean isUpdated = false;
 		Response response = null;
 		try {
 			// 디버깅용 시간측정
-			long debugStartTime = System.currentTimeMillis();
+			long startTime = System.currentTimeMillis();
 			
 			// 다나와 & 네이버 파싱
 			Tuple<ArrayList<CollectedInfo>, ArrayList<CollectedInfo>> received = ParserManager.getInstance().requestParse(product);
@@ -34,17 +39,58 @@ public class CollectedInfoTask {
 				IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 파싱 실패");
 				response = new Response(ResponseType.FAILED, "서버에서 수집 정보 파싱에 실패했습니다.");
 			}
-			else {
-				ArrayList<CollectedInfo> danawaParsed = received.getFirst();
-				ArrayList<CollectedInfo> naverShopParsed = received.getSecond();
-				
+			
+			// 백그라운드 스레드 생성
+			UpdateThread ut = new UpdateThread(product, received.getFirst(), received.getSecond());
+			
+			// 파싱하는데 걸린 시간이 n초 이상이면 백그라운드로 업데이트하고, 클라이언트에게는 기존 정보 반환함.
+			long diff = (long) ((System.currentTimeMillis() - startTime) / 1000.0);
+			IOHandler.getInstance().log("[DEBUG]파싱 시간 : " + diff + "초");
+			if(diff > COLLECT_TIMEOUT) {
+				IOHandler.getInstance().log("[DEBUG]파싱 시간 타임아웃으로 비동기로 업데이트 시킵니다.");
+				Executors.newFixedThreadPool(1).submit(ut);	// 비동기로 업데이트 시키고 걍 빤스런
+				return response = new Response(ResponseType.FAILED, "파싱 시간 타임아웃!");
+			}
+			
+			// 동기로 업데이트
+			Response res = ut.call();
+			
+			// 디버깅용 처리시간 표시
+			long endTime = System.currentTimeMillis();
+			IOHandler.getInstance().log("[DEBUG]파싱 & 업데이트 처리 시간 : " + (endTime - startTime) / 1000.0 + "초");
+			
+			return res;
+		}
+		catch(Exception e) {
+			IOHandler.getInstance().log("CollectedInfoTask.collect", e);
+			response = new Response(ResponseType.ERROR, "수집정보 갱신 중 서버에서 오류가 발생했습니다.");
+		}
+		
+		return response;
+	}
+	
+	class UpdateThread implements Callable<Response>{
+		
+		private final Product product;
+		private final ArrayList<CollectedInfo> danawaParsed;
+		private final ArrayList<CollectedInfo> naverShopParsed;
+		
+		public UpdateThread(Product product, ArrayList<CollectedInfo> danawaParsed, ArrayList<CollectedInfo> naverShopParsed) {
+			this.product = product;
+			this.danawaParsed = danawaParsed;
+			this.naverShopParsed = naverShopParsed;
+		}
+
+		@Override
+		public Response call() throws Exception {
+			try {
 				// 정확한 수집정보 선정을 위한 유사도 필터링
-				ArrayList<CollectedInfo> danawaFiltered = filtering(product, danawaParsed);
-				ArrayList<CollectedInfo> naverShopFiltered = filtering(product, naverShopParsed);
+				ArrayList<CollectedInfo> danawaFiltered = filtering(product, danawaParsed, true);
+				ArrayList<CollectedInfo> naverShopFiltered = filtering(product, naverShopParsed, false);
 				
 				if(danawaFiltered == null && naverShopFiltered == null) {
 					IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 동일한 제품을 찾는데 실패했습니다!");
-					response = new Response(ResponseType.SUCCEED, "동일한 제품을 찾는데 실패했습니다!");
+					return new Response(ResponseType.SUCCEED, "동일한 제품을 찾는데 실패했습니다!");
 				}
 				else {
 					// 목록 중 가장 저렴한 수집정보 선정
@@ -57,36 +103,29 @@ public class CollectedInfoTask {
 						// 파싱된 상품명을 DB에 있는 상품명으로 교체 후 DB에 업데이트
 						mostProperInfo.setProductName(product.getName());
 						CollectedInfoManager cim = new CollectedInfoManager();
-						isUpdated = cim.upsert(mostProperInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
+						boolean isUpdated = cim.upsert(mostProperInfo);	// DB에 업데이트함. true면 갱신됨, false면 실패 or 가격경쟁 패배
 						if(isUpdated) {
 							IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 업데이트 성공!");
-							response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트 성공!");
+							return new Response(ResponseType.SUCCEED, "수집 정보 업데이트 성공!");
 						}
 						else {
 							// 실패한건 아니고 업데이트가 안이루어진거임. 가격 경쟁 패배해서.
 							IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집 정보 업데이트 수행되지 않음");
-							response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
+							return new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
 						}
 					}
 					else {
 						IOHandler.getInstance().log("[DEBUG]상품명(검색어) : " + product.getName() + " 수집정보 업데이트 수행되지 않음!");
-						response = new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
+						return new Response(ResponseType.SUCCEED, "수집 정보 업데이트가 수행되지 않았습니다.");
 					}
 				}
-				
-				
 			}
-			
-			// 디버깅용 처리시간 표시
-			long debugEndTime = System.currentTimeMillis();
-			IOHandler.getInstance().log("[DEBUG]파싱 & 업데이트 처리 시간 : " + (debugEndTime - debugStartTime) / 1000.0 + "초");
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			return new Response(ResponseType.FAILED, "수집 정보 업데이트 중 오류 발생!");
 		}
-		catch(Exception e) {
-			IOHandler.getInstance().log("CollectedInfoTask.collect", e);
-			response = new Response(ResponseType.ERROR, "수집정보 갱신 중 서버에서 오류가 발생했습니다.");
-		}
-		
-		return response;
+
 	}
 	
 	public Tuple<Response, ArrayList<CollectedInfo>> findByProduct(Product product) {
@@ -111,35 +150,38 @@ public class CollectedInfoTask {
 	// ---------------------------------------------------------
 	
 	// 수집정보 목록 중 상품명과 비교해서 부정확한 수집정보는 배제한다.
-	private ArrayList<CollectedInfo> filtering(Product product, ArrayList<CollectedInfo> infoList) {
+	private ArrayList<CollectedInfo> filtering(Product product, ArrayList<CollectedInfo> infoList, boolean useSimilarFilter) {
 		if(infoList == null) {
 			return null;
 		}
 		
 		try {
-//			IOHandler.getInstance().log("[DEBUG]-------------------원본-------------------");
-//			int debugCnt = 0;
-//			for(CollectedInfo c : infoList) {
-//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-//			}
+			IOHandler.getInstance().log("[DEBUG]-------------------원본-------------------");
+			int debugCnt = 0;
+			for(CollectedInfo c : infoList) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
 			
 			// 필터 1 : 상품명에 코드가 있다면, 해당되는 수집정보만 남긴다.
 			codeFilter(product, infoList);
 			
-//			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
-//			debugCnt = 0;
-//			for(CollectedInfo c : infoList) {
-//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-//			}
+			IOHandler.getInstance().log("[DEBUG]-------------------1차 필터(코드) 후-------------------");
+			debugCnt = 0;
+			for(CollectedInfo c : infoList) {
+				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+			}
 			
 			// 필터 2 : 유사도를 비교한다. 유사도가 n 이하인 경우에만 남긴다.
-			simliarFilter(product, infoList);
+			if(useSimilarFilter) {
+				simliarFilter(product, infoList);
+				
+				IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
+				debugCnt = 0;
+				for(CollectedInfo c : infoList) {
+					IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
+				}
+			}
 			
-//			IOHandler.getInstance().log("[DEBUG]-------------------2차 필터(유사도) 후-------------------");
-//			debugCnt = 0;
-//			for(CollectedInfo c : infoList) {
-//				IOHandler.getInstance().log("[DEBUG]" + debugCnt++ + ". " + c.getProductName()+ ", " + c.getPrice());
-//			}
 			return infoList.size() > 0 ? infoList : null;
 		}
 		catch(Exception e) {
@@ -173,6 +215,7 @@ public class CollectedInfoTask {
 			CollectedInfo c = it.next();
 			int similarPoint = levenshteinDistance(productName, c.getProductName());
 			double similarPercentage = 100 - (similarPoint * 100 / productName.length());
+			IOHandler.getInstance().log("[DEBUG]" + c.getProductName() + ", 유사도 점수 : " + similarPoint + ", 유사도 퍼센트 : " + similarPercentage);
 			if(similarPercentage < MIN_SIMILAR_PERCENTAGE) {
 				it.remove();
 			}
@@ -193,12 +236,21 @@ public class CollectedInfoTask {
 		}
 		
 		if(danawaFirst != null && naverShopFirst != null) {
-			return danawaFirst.getPrice() > naverShopFirst.getPrice() ? naverShopFirst : danawaFirst;
+			if(danawaFirst.getPrice() < naverShopFirst.getPrice()) {
+				IOHandler.getInstance().log("[DEBUG]다나와 승!");
+				return danawaFirst;
+			}
+			else {
+				IOHandler.getInstance().log("[DEBUG]네이버 승!");
+				return naverShopFirst;
+			}
 		}
 		else if(danawaFirst != null) {
+			IOHandler.getInstance().log("[DEBUG]다나와 부전승!");
 			return danawaFirst;
 		}
 		else {
+			IOHandler.getInstance().log("[DEBUG]네이버 부전승!");
 			return naverShopFirst;
 		}
 	}

@@ -40,7 +40,7 @@ public class DBCP {
 			try {
 				c = DriverManager.getConnection(DBInfo.DB_URL.toString(), DBInfo.USER_NAME.toString(), DBInfo.PASSWORD.toString());
 				connections.add(new MyConnection(c));
-				IOHandler.getInstance().log("[DBCP] initConnections : 커넥션 생성됨");
+				IOHandler.getInstance().log("[DBCP] initConnections : 커넥션 생성됨 : " + DBInfo.DB_URL.toString());
 			} catch (SQLException e) {
 				IOHandler.getInstance().log("[DBCP] initConnections : 커넥션 생성 실패");
 				e.printStackTrace();
