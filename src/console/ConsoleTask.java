@@ -72,14 +72,17 @@ public class ConsoleTask {
 	// 수동으로 CSV 폴더 경로를 주면 내부의 모든 CSV를 파싱하여 DB를 업데이트하는 메소드
 	public void manualDumpCSV() {
 		CSVReader cr = new CSVReader();
+		if(cr.isRunning()) {
+			int userInput = IOHandler.getInstance().getIntByUser("이미 CSV 파싱 중입니다. 취소하시겠습니까? (0:아니오/1:예)");
+			if(userInput == 1) {
+				IOHandler.getInstance().log("[SYSTEM} 사용자에 의해 CSV 덤프 취소 요청을 합니다.");
+				cr.abortDump();
+			}
+			return;
+		}
 		String userInput = IOHandler.getInstance().getLineByUser("경로를 입력하세요.");
-		boolean isSucceed = cr.dumpCSV(userInput);
-		if(isSucceed) {
-			IOHandler.getInstance().log("[SYSTEM]경로 " + userInput + " 내의 모든 CSV가 DB에 갱신되었습니다.");
-		}
-		else {
-			IOHandler.getInstance().log("[SYSTEM]경로 " + userInput + " 내의 CSV를 갱신하는 도중 오류가 발생하였습니다.");
-		}
+		cr.dumpCSVBackground(userInput);
+		IOHandler.getInstance().log("[SYSTEM]경로 " + userInput + " 내의 모든 CSV를 DB에 갱신 시작합니다.");
 	}
 	
 	// 수동 계정 추가

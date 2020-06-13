@@ -27,6 +27,66 @@ import utility.IOHandler;
 
 public class CSVReader {
 	
+	private static DumpThread _dumpThread;
+	
+	public void dumpCSVBackground(final String path) {
+		_dumpThread = new DumpThread(path);
+		
+		Thread t = new Thread(_dumpThread);
+		t.start();
+	}
+	
+	public void abortDump() {
+		if(_dumpThread != null) {
+			_dumpThread.abortDump();
+		}
+	}
+	
+	public boolean isRunning() {
+		if(_dumpThread != null) {
+			return _dumpThread.isRunning();
+		}
+		return false;
+	}
+}
+
+class DumpThread implements Runnable{
+	
+	private final String path;
+	private boolean abort = false;
+	private boolean isRunning = false;
+	
+	public DumpThread(final String path) {
+		this.path = path;
+	}
+	
+	public void abortDump() {
+		this.abort = true;
+		isRunning = false;
+	}
+	
+	public boolean isRunning() {
+		return isRunning;
+	}
+
+	@Override
+	public void run() {
+		isRunning = true;
+		boolean isComplete = dumpCSV(path);
+		String message;
+		if(isComplete) {
+			message = "[공공데이터 DB] 모든 CSV가 DB에 갱신되었습니다.";
+		}
+		else if(abort == true) {
+			message = "[공공데이터 DB] 사용자의 요청으로 중단되었습니다.";
+		}
+		else {
+			message = "[공공데이터 DB] CSV를 갱신하는 도중 오류가 발생하였습니다.";
+		}
+		IOHandler.getInstance().log(message);
+		isRunning = false;
+	}
+	
 	// 주어진 경로 내에 존재하는 CSV파일을 읽고 DB에 올린다. 하위 폴더까지는 찾지 않음.
 	public boolean dumpCSV(String path) {
 		File dir = new File(path);
@@ -66,6 +126,10 @@ public class CSVReader {
 				int cnt = 0;
 				IOHandler.getInstance().log("[공공데이터 DB] " + filePath + " 업데이트 시작(총 " + productList.size() + "개)");
 				for(CSVProduct p : productList) {
+					if(abort) {
+						IOHandler.getInstance().log("[공공데이터 DB] 사용자의 요청으로 중단됨.");
+						return false;
+					}
 					update(p);						
 					
 					// 1000항목당 한번씩 알림
@@ -82,7 +146,8 @@ public class CSVReader {
 			return succeedCnt == fileList.length ? true : false;
 		}
 		catch(Exception e) {
-			IOHandler.getInstance().log("CSVReader.dumpCSV-Unknown",e);
+			IOHandler.getInstance().log("CSVReader.dumpCSV",e);
+			e.printStackTrace();
 		}
 		return false;
 	}
@@ -98,26 +163,36 @@ public class CSVReader {
 	        InputStreamReader reader = new InputStreamReader(input, decoder);
 	        BufferedReader bufferedReader = new BufferedReader( reader );
 	        
+	        String errorLine = "";
 	        String line = bufferedReader.readLine();							// 헤더부분(첫줄)은 읽고 버린다
 	        while( (line = bufferedReader.readLine()) != null ) {
-	            String[] splited = line.split(",");
-	            String collectedDate = splited[0];
-	            String productId = splited[1];
-	            String categoryId = splited[2];
-	            String categoryName = splited[3];								// 품목명도 일단 파싱함. 처음 보는 품목ID면 품목을 DB에 신규 등록하기 위함임.
-	            String productName = splited[4];
-	            String price = splited[6];
-	            
-	            CSVProduct product = new CSVProduct(collectedDate, productId, categoryId, categoryName, productName, price);
-	            result.add(product);
+	        	try {
+	        		errorLine = line;
+	        		String[] splited = line.split(",");
+		            String collectedDate = splited[0];
+		            String productId = splited[1];
+		            String categoryId = splited[2];
+		            String categoryName = splited[3];								// 품목명도 일단 파싱함. 처음 보는 품목ID면 품목을 DB에 신규 등록하기 위함임.
+		            String productName = splited[4];
+		            String price = splited[6];
+		            CSVProduct product = new CSVProduct(collectedDate, productId, categoryId, categoryName, productName, price);
+		            result.add(product);
+	        	}
+	        	catch (Exception e) {
+	        		IOHandler.getInstance().log("CSV 파일에 이상한 항목이 있어 무시했습니다.\n파일명:" + filePath + "\n에러라인:" + errorLine);
+//		        		e.printStackTrace();
+				}
 	        }
 	        bufferedReader.close();
 	    } catch (FileNotFoundException e) {
 	        IOHandler.getInstance().log("CSVReader.read-FileNotFound", e);
+	        e.printStackTrace();
 	    } catch( IOException e ) {
 	    	IOHandler.getInstance().log("CSVReader.read-IO",e);
+	    	e.printStackTrace();
 	    } catch(Exception e) {
 	    	IOHandler.getInstance().log("CSVReader.read-Unknown",e);
+	    	e.printStackTrace();
 	    }
 	    return result;
 	}
